@@ -1,0 +1,6 @@
+pybabel extract --input-dirs=. -o i18n\messages.pot
+
+pybabel init -l ja -i i18n\messages.pot -d i18n
+pybabel init -l en -i i18n\messages.pot -d i18n
+
+
