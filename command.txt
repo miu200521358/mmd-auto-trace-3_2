@@ -3,6 +3,7 @@ pybabel extract --input-dirs=. -o i18n\messages.pot
 pybabel init -l ja -i i18n\messages.pot -d i18n
 pybabel init -l en -i i18n\messages.pot -d i18n
 
+(snipper3) C:\MMD\mmd-auto-trace-3\src>git submodule add https://github.com/miu200521358/Snipper
 
 
 
