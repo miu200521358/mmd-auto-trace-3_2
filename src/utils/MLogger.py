@@ -162,18 +162,21 @@ class MLogger():
             # 翻訳する
             if self.mode == LoggingMode.MODE_UPDATE:
                 # 更新ありの場合、既存データのチェックを行って追記する
-                messagelist = []
+                messages = []
                 with open("i18n/messages.pot", mode='r', encoding='utf-8') as f:
-                    messagelist = f.readlines()
+                    messages = f.readlines()
 
-                if msg not in messagelist:
-                    new_msg = self.re_break.sub("\\\\n", msg)
-                    messagelist.append(f'msgid "{new_msg}"\n')
-                    messagelist.append('msgstr ""\n')
-                    messagelist.append('\n')
+                new_msg = self.re_break.sub("\\\\n", msg)
+                added_msg_idxs = [n + 1 for n, inmsg in enumerate(messages) if "msgid" in inmsg and new_msg in inmsg]
+
+                if not added_msg_idxs:
+                    messages.append(f'msgid "{new_msg}"\n')
+                    messages.append('msgstr ""\n')
+                    messages.append('\n')
+                    print("add message: %s", new_msg)
                     
-                with open("i18n/messages.pot", mode='w', encoding='utf-8') as f:
-                    f.writelines(messagelist)
+                    with open("i18n/messages.pot", mode='w', encoding='utf-8') as f:
+                        f.writelines(messages)
             
             # 翻訳結果を取得する
             trans_msg = self.translater.gettext(msg)

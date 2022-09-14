@@ -4,12 +4,13 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(__file__, "../../gitmodule")))
+sys.path.append(os.path.abspath(os.path.join(__file__, "../../gitmodule/Snipper")))
 
 import torch
-from inference_utils import (associate_snippets, get_all_samples,
-                             save_as_videos, save_visual_results,
-                             visualize_heatmaps)
-from models.model import build_model
+from Snipper.inference_utils import (associate_snippets, get_all_samples,
+                                     save_as_videos, save_visual_results,
+                                     visualize_heatmaps)
+from Snipper.models.model import build_model
 from tqdm import tqdm
 from utils.MLogger import MLogger
 

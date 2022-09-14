@@ -79,7 +79,7 @@ def execute(args):
             logger.info("元動画読み込み開始", decoration=MLogger.DECORATION_BOX)
 
             if width % 40 != 0 or org_height % 40 != 0:
-                logger.warning("入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}-{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}", 
+                logger.warning("入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}x{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}", 
                 W=W, H=H, width=width, org_height=org_height, height=height, video_file=args.video_file, decoration=MLogger.DECORATION_BOX)
 
             for n in tqdm(range(int(count))):

@@ -26,8 +26,8 @@ msgstr "【初回チェック】\n　ファイル名: {video_file}, ファイル
 msgid "元動画読み込み開始"
 msgstr "元動画読み込み開始"
 
-msgid "入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}-{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}"
-msgstr "入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}-{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}"
+msgid "入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}x{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}"
+msgstr "入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}x{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}"
 msgid "補間生成開始"
 msgstr "補間生成開始"
 
