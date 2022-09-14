@@ -5,7 +5,7 @@ from typing import Any, Union
 import numpy as np
 from quaternion import from_rotation_matrix, quaternion
 
-from mlib.base.base import BaseModel
+from base.base import BaseModel
 
 
 class MRect(BaseModel):
@@ -215,7 +215,7 @@ class MVector(BaseModel):
             return bool(np.all(np.greater_equal(self.vector, other)))
 
     def __bool__(self) -> bool:
-        return bool(np.all(self.vector == 0))
+        return not bool(np.all(self.vector == 0))
 
     def __add__(self, other):
         return operate_vector(self, other, operator.add)

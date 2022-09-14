@@ -1,11 +1,11 @@
 from struct import Struct
 
-from mlib.base.base import Encoding
-from mlib.exception import MParseException
-from mlib.math import MVector3D
-from mlib.base.part import Switch
-from mlib.pmx.collection import PmxModel
-from mlib.pmx.part import (
+from base.base import Encoding
+from base.exception import MParseException
+from base.math import MVector3D
+from base.part import Switch
+from mmd.pmx.collection import PmxModel
+from mmd.pmx.part import (
     Bdef1,
     Bdef2,
     Bdef4,
@@ -37,7 +37,7 @@ from mlib.pmx.part import (
     Vertex,
     VertexMorphOffset,
 )
-from mlib.base.reader import BaseReader, StructUnpackType
+from base.reader import BaseReader, StructUnpackType
 
 
 class PmxReader(BaseReader[PmxModel]):

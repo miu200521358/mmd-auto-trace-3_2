@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, TypeVar
 
 import numpy as np
-from mlib.base.base import BaseModel, Encoding
-from mlib.base.part import BaseIndexModel, BaseIndexNameModel
+from base.base import BaseModel, Encoding
+from base.part import BaseIndexModel, BaseIndexNameModel
 
 TBaseIndexModel = TypeVar("TBaseIndexModel", bound=BaseIndexModel)
 TBaseIndexNameModel = TypeVar("TBaseIndexNameModel", bound=BaseIndexNameModel)

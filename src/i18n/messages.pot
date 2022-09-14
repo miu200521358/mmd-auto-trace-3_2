@@ -69,3 +69,30 @@ msgstr ""
 msgid "姿勢推定結果保存完了: {output_dir}"
 msgstr ""
 
+msgid "関節スムージング処理開始: {img_dir}"
+msgstr ""
+
+msgid "関節スムージング処理終了: {0}"
+msgstr ""
+
+msgid "関節スムージング処理終了: {img_dir}"
+msgstr ""
+
+msgid "【No.{oidx}】関節スムージング開始"
+msgstr ""
+
+msgid "関節スムージングで予期せぬエラーが発生しました。"
+msgstr ""
+
+msgid "モーション生成処理開始: {img_dir}"
+msgstr ""
+
+msgid "【No.{oidx}】モーション結果位置計算開始"
+msgstr ""
+
+msgid "【No.{oidx}】モーション(移動)計算開始"
+msgstr ""
+
+msgid "【No.{oidx}】モーション(移動)生成開始【{path}】"
+msgstr ""
+

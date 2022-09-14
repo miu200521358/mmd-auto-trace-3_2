@@ -1,5 +1,5 @@
-from mlib.base.base import BaseModel
-from mlib.math import MVector2D
+from base.base import BaseModel
+from base.math import MVector2D
 
 # MMDでの補間曲線の最大値
 INTERPOLATION_MMD_MAX = 127

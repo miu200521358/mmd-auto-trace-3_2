@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import os
 import pathlib
@@ -10,20 +9,29 @@ import numpy as np
 from PIL import Image
 from skimage import img_as_ubyte
 from tqdm import tqdm
-from utils.MLogger import MLogger
+from base.logger import MLogger
 
 logger = MLogger(__name__)
+
 
 def execute(args):
     try:
         logger.info("動画準備開始", decoration=MLogger.DECORATION_BOX)
 
         if not os.path.exists(args.video_file):
-            logger.error("指定されたファイルパスが存在しません。\n{video_file}", video_file=args.video_file, decoration=MLogger.DECORATION_BOX)
+            logger.error(
+                "指定されたファイルパスが存在しません。\n{video_file}",
+                video_file=args.video_file,
+                decoration=MLogger.DECORATION_BOX,
+            )
             return False, None
 
         # 親パス(指定がなければ動画のある場所。Colabはローカルで作成するので指定あり想定)
-        base_path = str(pathlib.Path(args.video_file).parent) if not args.parent_dir else args.parent_dir
+        base_path = (
+            str(pathlib.Path(args.video_file).parent)
+            if not args.parent_dir
+            else args.parent_dir
+        )
         video = cv2.VideoCapture(args.video_file)
 
         # 幅
@@ -35,8 +43,16 @@ def execute(args):
         # fps
         fps = video.get(cv2.CAP_PROP_FPS)
 
-        logger.info("【初回チェック】\n　ファイル名: {video_file}, ファイルサイズ: {size}, 横: {W}, 縦: {H}, フレーム数: {count}, fps: {fps}", 
-                    video_file=args.video_file, size=os.path.getsize(args.video_file), W=W, H=H, count=count, fps=fps, decoration=MLogger.DECORATION_BOX)
+        logger.info(
+            "【初回チェック】\n　ファイル名: {video_file}, ファイルサイズ: {size}, 横: {W}, 縦: {H}, フレーム数: {count}, fps: {fps}",
+            video_file=args.video_file,
+            size=os.path.getsize(args.video_file),
+            W=W,
+            H=H,
+            count=count,
+            fps=fps,
+            decoration=MLogger.DECORATION_BOX,
+        )
 
         # 縮尺を調整(Colabは容量の問題でちょっと小さめ)
         if W > H:
@@ -49,7 +65,13 @@ def execute(args):
         if len(args.parent_dir) > 0:
             process_img_dir = base_path
         else:
-            process_img_dir = os.path.join(base_path, "{0}_{1:%Y%m%d_%H%M%S}".format(os.path.basename(args.video_file).replace('.', '_'), datetime.datetime.now()))
+            process_img_dir = os.path.join(
+                base_path,
+                "{0}_{1:%Y%m%d_%H%M%S}".format(
+                    os.path.basename(args.video_file).replace(".", "_"),
+                    datetime.datetime.now(),
+                ),
+            )
 
         # 既存は削除
         if os.path.exists(process_img_dir):
@@ -79,8 +101,16 @@ def execute(args):
             logger.info("元動画読み込み開始", decoration=MLogger.DECORATION_BOX)
 
             if width % 40 != 0 or org_height % 40 != 0:
-                logger.warning("入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}x{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}", 
-                W=W, H=H, width=width, org_height=org_height, height=height, video_file=args.video_file, decoration=MLogger.DECORATION_BOX)
+                logger.warning(
+                    "入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}x{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}",
+                    W=W,
+                    H=H,
+                    width=width,
+                    org_height=org_height,
+                    height=height,
+                    video_file=args.video_file,
+                    decoration=MLogger.DECORATION_BOX,
+                )
 
             for n in tqdm(range(int(count))):
                 # 動画から1枚キャプチャして読み込む
@@ -89,7 +119,7 @@ def execute(args):
                 # 動画が終わっていたら終了
                 if flag == False:
                     break
-                
+
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
 
@@ -103,7 +133,7 @@ def execute(args):
                         img = Image.new(org_img.mode, (width, height), (0, 0, 0))
 
                         img.paste(org_img, (0, height - org_height))
-                        
+
                     except Exception as e:
                         # エラーするようなら無視
                         logger.error(e)
@@ -140,7 +170,14 @@ def execute(args):
             # 終わったら開放
             cap.release()
 
-            logger.info("【再チェック】\n　準備フォルダ: {process_img_dir}, 横: {width}, 縦: {height}, フレーム数: {last}, fps: {fps}", process_img_dir=process_img_dir, width=width, height=height, last=round(interpolations[-1]), fps=30)
+            logger.info(
+                "【再チェック】\n　準備フォルダ: {process_img_dir}, 横: {width}, 縦: {height}, フレーム数: {last}, fps: {fps}",
+                process_img_dir=process_img_dir,
+                width=width,
+                height=height,
+                last=round(interpolations[-1]),
+                fps=30,
+            )
         except Exception as e:
             logger.error("再エンコード失敗", e)
             return False, None
@@ -150,11 +187,13 @@ def execute(args):
         # resizeは削除
         shutil.rmtree(os.path.join(process_img_dir, "resize"))
 
-        logger.info("動画準備完了: {process_img_dir}", process_img_dir=process_img_dir, decoration=MLogger.DECORATION_BOX)
+        logger.info(
+            "動画準備完了: {process_img_dir}",
+            process_img_dir=process_img_dir,
+            decoration=MLogger.DECORATION_BOX,
+        )
 
         return True, process_img_dir
     except Exception as e:
         logger.critical("動画準備で予期せぬエラーが発生しました。", e, decoration=MLogger.DECORATION_BOX)
         return False, None
-
-

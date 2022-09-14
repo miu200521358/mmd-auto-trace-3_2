@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import glob
 import json
 import os
@@ -14,7 +13,7 @@ if __name__ == "__main__":
     re_message = re.compile(r'"(.*)"')
 
     messages = []
-    with open("i18n/messages.pot", mode='r', encoding='utf-8') as f:
+    with open("i18n/messages.pot", mode="r", encoding="utf-8") as f:
         messages = f.readlines()
 
     for file_path in glob.glob(os.path.join("i18n\\**\\messages.po"), recursive=True):
@@ -23,7 +22,7 @@ if __name__ == "__main__":
 
         try:
             trans_messages = []
-            with open(file_path, mode='r', encoding='utf-8') as f:
+            with open(file_path, mode="r", encoding="utf-8") as f:
                 trans_messages = f.readlines()
 
             msg_id = None
@@ -37,9 +36,16 @@ if __name__ == "__main__":
                     if m:
                         msg_id = m.group()
                         continue
-                
+
                 if msg_id and "msgstr" in org_msg:
-                    transed_msg_idxs = [n + 1 for n, msg in enumerate(trans_messages) if "msgid" in msg and "msgstr" in trans_messages[n + 1] and msg_id in msg and '""' not in trans_messages[n + 1]]
+                    transed_msg_idxs = [
+                        n + 1
+                        for n, msg in enumerate(trans_messages)
+                        if "msgid" in msg
+                        and "msgstr" in trans_messages[n + 1]
+                        and msg_id in msg
+                        and '""' not in trans_messages[n + 1]
+                    ]
 
                     msg_str = msg_id
                     if transed_msg_idxs:
@@ -47,7 +53,7 @@ if __name__ == "__main__":
                         messages[i] = trans_messages[transed_msg_idxs[0]]
                     else:
                         if is_ja:
-                            messages[i] = f'msgstr {msg_id}'
+                            messages[i] = f"msgstr {msg_id}"
                         else:
                             # 値がないメッセージを翻訳
                             params = (
@@ -68,7 +74,7 @@ if __name__ == "__main__":
 
                             if "text" in results:
                                 v = results["text"]
-                                messages[i] = f'msgstr {v}'
+                                messages[i] = f"msgstr {v}"
                                 print(f"「{msg_id}」 -> 「{v}」")
                         msg_id = None
 

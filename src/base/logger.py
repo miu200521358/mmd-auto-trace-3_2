@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 import gettext
 import logging
 import os
@@ -10,8 +8,10 @@ from enum import IntEnum
 
 import numpy as np
 
+from base.exception import MLibException
 
-class LoggingMode(IntEnum):   
+
+class LoggingMode(IntEnum):
     # 翻訳モード
     # 読み取り専用：翻訳リストにない文字列は入力文字列をそのまま出力する
     MODE_READONLY = 0
@@ -19,7 +19,7 @@ class LoggingMode(IntEnum):
     MODE_UPDATE = 1
 
 
-class MLogger():
+class MLogger:
 
     DECORATION_IN_BOX = "in_box"
     DECORATION_BOX = "box"
@@ -36,7 +36,7 @@ class MLogger():
     WARNING = logging.WARNING
     ERROR = logging.ERROR
     CRITICAL = logging.CRITICAL
-    
+
     # システム全体のロギングレベル
     total_level = logging.INFO
     # システム全体の開始出力日時
@@ -70,18 +70,18 @@ class MLogger():
             fh.setLevel(self.default_level)
             fh.setFormatter(logging.Formatter(self.DEFAULT_FORMAT))
             self.logger.addHandler(fh)
-    
+
     def time(self, msg, *args, **kwargs):
         if not kwargs:
             kwargs = {}
-            
+
         kwargs["level"] = self.TIMER
         self.print_logger(msg, *args, **kwargs)
 
     def info_debug(self, msg, *args, **kwargs):
         if not kwargs:
             kwargs = {}
-            
+
         kwargs["level"] = self.INFO_DEBUG
         self.print_logger(msg, *args, **kwargs)
 
@@ -91,18 +91,18 @@ class MLogger():
 
         kwargs["level"] = self.TEST
         self.print_logger(msg, *args, **kwargs)
-    
+
     def debug(self, msg, *args, **kwargs):
         if not kwargs:
             kwargs = {}
-            
+
         kwargs["level"] = logging.DEBUG
         self.print_logger(msg, *args, **kwargs)
-    
+
     def info(self, msg, *args, **kwargs):
         if not kwargs:
             kwargs = {}
-            
+
         kwargs["level"] = logging.INFO
         self.print_logger(msg, *args, **kwargs)
 
@@ -112,14 +112,14 @@ class MLogger():
 
         if fnos and len(fnos) > 0 and fnos[-1] > 0:
             last_fno = fnos[-1]
-        
+
         if not fnos and kwargs and "last_fno" in kwargs and kwargs["last_fno"] > 0:
             last_fno = kwargs["last_fno"]
 
         if last_fno > 0:
             if not kwargs:
                 kwargs = {}
-                
+
             kwargs["level"] = logging.INFO
             kwargs["fno"] = fno
             kwargs["per"] = round((fno / last_fno) * 100, 3)
@@ -130,21 +130,21 @@ class MLogger():
     def warning(self, msg, *args, **kwargs):
         if not kwargs:
             kwargs = {}
-            
+
         kwargs["level"] = logging.WARNING
         self.print_logger(msg, *args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
         if not kwargs:
             kwargs = {}
-            
+
         kwargs["level"] = logging.ERROR
         self.print_logger(msg, *args, **kwargs)
 
     def critical(self, msg, *args, **kwargs):
         if not kwargs:
             kwargs = {}
-            
+
         kwargs["level"] = logging.CRITICAL
         self.print_logger(msg, *args, **kwargs)
 
@@ -163,32 +163,58 @@ class MLogger():
             if self.mode == LoggingMode.MODE_UPDATE:
                 # 更新ありの場合、既存データのチェックを行って追記する
                 messages = []
-                with open("i18n/messages.pot", mode='r', encoding='utf-8') as f:
+                with open("i18n/messages.pot", mode="r", encoding="utf-8") as f:
                     messages = f.readlines()
 
                 new_msg = self.re_break.sub("\\\\n", msg)
-                added_msg_idxs = [n + 1 for n, inmsg in enumerate(messages) if "msgid" in inmsg and new_msg in inmsg]
+                added_msg_idxs = [
+                    n + 1
+                    for n, inmsg in enumerate(messages)
+                    if "msgid" in inmsg and new_msg in inmsg
+                ]
 
                 if not added_msg_idxs:
                     messages.append(f'msgid "{new_msg}"\n')
                     messages.append('msgstr ""\n')
-                    messages.append('\n')
+                    messages.append("\n")
                     print("add message: %s", new_msg)
-                    
-                    with open("i18n/messages.pot", mode='w', encoding='utf-8') as f:
+
+                    with open("i18n/messages.pot", mode="w", encoding="utf-8") as f:
                         f.writelines(messages)
-            
+
             # 翻訳結果を取得する
             trans_msg = self.translater.gettext(msg)
 
             # ログレコード生成
-            if args and isinstance(args[0], Exception) or (args and len(args) > 1 and isinstance(args[0], Exception)):
+            if (
+                args
+                and isinstance(args[0], Exception)
+                or (args and len(args) > 1 and isinstance(args[0], Exception))
+            ):
                 trans_msg = f"{trans_msg}\n\n{traceback.format_exc()}"
                 args = None
-                log_record = self.logger.makeRecord('name', target_level, "(unknown file)", 0, args, None, None, self.module_name)
+                log_record = self.logger.makeRecord(
+                    "name",
+                    target_level,
+                    "(unknown file)",
+                    0,
+                    args,
+                    None,
+                    None,
+                    self.module_name,
+                )
             else:
-                log_record = self.logger.makeRecord('name', target_level, "(unknown file)", 0, trans_msg, args, None, self.module_name)
-            
+                log_record = self.logger.makeRecord(
+                    "name",
+                    target_level,
+                    "(unknown file)",
+                    0,
+                    trans_msg,
+                    args,
+                    None,
+                    self.module_name,
+                )
+
             target_decoration = kwargs.pop("decoration", None)
             title = kwargs.pop("title", None)
 
@@ -200,21 +226,36 @@ class MLogger():
                 if target_decoration == MLogger.DECORATION_BOX:
                     output_msg = self.create_box_message(print_msg, target_level, title)
                 elif target_decoration == MLogger.DECORATION_LINE:
-                    output_msg = self.create_line_message(print_msg, target_level, title)
+                    output_msg = self.create_line_message(
+                        print_msg, target_level, title
+                    )
                 elif target_decoration == MLogger.DECORATION_IN_BOX:
-                    output_msg = self.create_in_box_message(print_msg, target_level, title)
+                    output_msg = self.create_in_box_message(
+                        print_msg, target_level, title
+                    )
                 else:
-                    output_msg = self.create_simple_message(print_msg, target_level, title)
+                    output_msg = self.create_simple_message(
+                        print_msg, target_level, title
+                    )
             else:
                 output_msg = self.create_simple_message(print_msg, target_level, title)
-        
+
             # 出力
             try:
-                log_record = self.logger.makeRecord('name', target_level, "(unknown file)", 0, output_msg, None, None, self.module_name)
+                log_record = self.logger.makeRecord(
+                    "name",
+                    target_level,
+                    "(unknown file)",
+                    0,
+                    output_msg,
+                    None,
+                    None,
+                    self.module_name,
+                )
                 self.logger.handle(log_record)
             except Exception as e:
                 raise e
-            
+
     def create_box_message(self, msg, level, title=None):
         msg_block = []
         msg_block.append("■■■■■■■■■■■■■■■■■")
@@ -256,15 +297,17 @@ class MLogger():
 
     def create_simple_message(self, msg, level, title=None):
         msg_block = []
-        
+
         for msg_line in msg.split("\n"):
             # msg_block.append("[{0}] {1}".format(logging.getLevelName(level)[0], msg_line))
             msg_block.append(msg_line)
-        
+
         return "\n".join(msg_block)
-    
+
     @classmethod
-    def initialize(cls, lang: str, mode: LoggingMode, level=logging.INFO, out_path=None):
+    def initialize(
+        cls, lang: str, mode: LoggingMode, level=logging.INFO, out_path=None
+    ):
         logging.basicConfig(level=level, format=cls.DEFAULT_FORMAT)
         cls.total_level = level
         cls.mode = mode
@@ -272,10 +315,10 @@ class MLogger():
 
         # 翻訳用クラスの設定
         cls.translater = gettext.translation(
-            'messages',                     # domain: 辞書ファイルの名前
-            localedir="i18n",               # 辞書ファイル配置ディレクトリ
-            languages=[lang],               # 翻訳に使用する言語
-            fallback=True                   # .moファイルが見つからなかった時は未翻訳の文字列を出力
+            "messages",  # domain: 辞書ファイルの名前
+            localedir="i18n",  # 辞書ファイル配置ディレクトリ
+            languages=[lang],  # 翻訳に使用する言語
+            fallback=True,  # .moファイルが見つからなかった時は未翻訳の文字列を出力
         )
 
         outout_datetime = "{0:%Y%m%d_%H%M%S}".format(datetime.now())
@@ -320,3 +363,28 @@ def parse_str(v: object) -> str:
         return f"{np.round(v.__getattribute__('data'), decimals)}"
     else:
         return f"{v}"
+
+
+# ファイルのエンコードを取得する
+def get_file_encoding(file_path):
+
+    try:
+        f = open(file_path, "rb")
+        fbytes = f.read()
+        f.close()
+    except:
+        raise MLibException("unknown encoding!")
+
+    codelst = ("utf-8", "shift-jis")
+
+    for encoding in codelst:
+        try:
+            fstr = fbytes.decode(encoding)  # bytes文字列から指定文字コードの文字列に変換
+            fstr = fstr.encode("utf-8")  # uft-8文字列に変換
+            # 問題なく変換できたらエンコードを返す
+            return encoding
+        except Exception as e:
+            print(e)
+            pass
+
+    raise MLibException("unknown encoding!")

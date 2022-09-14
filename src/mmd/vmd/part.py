@@ -1,9 +1,7 @@
-from typing import List
-
-from mlib.base.base import BaseModel
-from mlib.base.part import BaseIndexModel, BaseIndexNameModel, BaseRotationModel
-from mlib.bezier import Interpolation
-from mlib.math import MMatrix4x4, MQuaternion, MVector3D
+from base.base import BaseModel
+from base.bezier import Interpolation
+from base.math import MMatrix4x4, MQuaternion, MVector3D
+from base.part import BaseIndexModel, BaseIndexNameModel, BaseRotationModel
 
 
 class BaseVmdFrame(BaseIndexModel):
@@ -81,21 +79,78 @@ class BoneInterpolations(BaseModel):
         translation_y: Interpolation = None,
         translation_z: Interpolation = None,
         rotation: Interpolation = None,
-        residue0: int = 0,
-        residue1: int = 0,
-        residue2: int = 0,
-        residue3: int = 0,
-        residue4: int = 0,
+        vals: list[int] = None,
     ):
         self.translation_x: Interpolation = translation_x or Interpolation()
         self.translation_y: Interpolation = translation_y or Interpolation()
         self.translation_z: Interpolation = translation_z or Interpolation()
         self.rotation: Interpolation = rotation or Interpolation()
-        self.residue0 = residue0 or 0
-        self.residue1 = residue1 or 0
-        self.residue2 = residue2 or 0
-        self.residue3 = residue3 or 0
-        self.residue4 = residue4 or 0
+        self.vals = vals or [
+            20,
+            20,
+            0,
+            0,
+            20,
+            20,
+            20,
+            20,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            0,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            0,
+            0,
+            20,
+            20,
+            20,
+            20,
+            20,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            107,
+            0,
+            0,
+            0,
+        ]
 
 
 class VmdBoneFrame(BaseVmdNameFrame):
@@ -354,7 +409,7 @@ class VmdShowIkFrame(BaseVmdFrame):
         キーフレ, by default None
     show : bool, optional
         表示有無, by default None
-    iks : List[VmdIk], optional
+    iks : list[VmdIk], optional
         IKリスト, by default None
     regist : bool, optional
         登録対象か否か, by default None
@@ -366,10 +421,10 @@ class VmdShowIkFrame(BaseVmdFrame):
         self,
         index: int = None,
         show: bool = None,
-        iks: List[VmdIkOnoff] = None,
+        iks: list[VmdIkOnoff] = None,
         regist: bool = None,
         read: bool = None,
     ):
         super().__init__(index, regist, read)
         self.show: bool = show or True
-        self.iks: List[VmdIkOnoff] = iks or []
+        self.iks: list[VmdIkOnoff] = iks or []

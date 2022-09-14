@@ -1,13 +1,14 @@
-from mlib.base.collection import (
+import numpy as np
+from base.bezier import evaluate
+from base.collection import (
     BaseHashModel,
     BaseIndexDictModel,
     BaseIndexNameDictInnerModel,
     BaseIndexNameDictModel,
 )
-from mlib.bezier import evaluate
-from mlib.math import MMatrix4x4, MMatrix4x4List, MQuaternion
-from mlib.pmx.part import BoneTree
-from mlib.vmd.part import (
+from base.math import MMatrix4x4, MQuaternion
+from mmd.pmx.part import BoneTree
+from mmd.vmd.part import (
     VmdBoneFrame,
     VmdCameraFrame,
     VmdLightFrame,
@@ -225,6 +226,9 @@ class VmdMotion(BaseHashModel):
         self.lights: VmdLightFrames = VmdLightFrames()
         self.shadows: VmdShadowFrames = VmdShadowFrames()
         self.showiks: VmdShowIkFrames = VmdShowIkFrames()
+
+    def get_bone_count(self) -> int:
+        return np.sum([len(bfs) for bfs in self.bones])
 
     def get_name(self) -> str:
         return self.model_name
