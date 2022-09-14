@@ -3,8 +3,7 @@ import argparse
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(__file__, "../../gitmodule")))
-sys.path.append(os.path.abspath(os.path.join(__file__, "../../gitmodule/Snipper")))
+sys.path.append(os.path.abspath(os.path.join(__file__, "../../Snipper")))
 
 import torch
 from Snipper.inference_utils import (associate_snippets, get_all_samples,
@@ -18,10 +17,10 @@ logger = MLogger(__name__)
 
 def execute(args):
     try:
-        logger.info('人物姿勢推定開始: {0}', args.img_dir, decoration=MLogger.DECORATION_BOX)
+        logger.info('人物姿勢推定開始: {img_dir}', img_dir=args.img_dir, decoration=MLogger.DECORATION_BOX)
 
         if not os.path.exists(args.img_dir):
-            logger.error("指定された処理用ディレクトリが存在しません。: {0}", args.img_dir, decoration=MLogger.DECORATION_BOX)
+            logger.error("指定された処理用ディレクトリが存在しません。: {img_dir}", img_dir=args.img_dir, decoration=MLogger.DECORATION_BOX)
             return False
 
         torch.backends.cudnn.benchmark = True
@@ -31,9 +30,7 @@ def execute(args):
         argv = parser.parse_args(args=[])
 
         argv.data_dir = os.path.join(args.img_dir, "frames")
-        argv.output_dir = os.path.join(args.img_dir, "pose")
-
-        logger.info("動画準備開始", decoration=MLogger.DECORATION_BOX)
+        argv.output_dir = args.img_dir
 
         if not os.path.exists(args.img_dir):
             logger.error("指定されたディレクトリが存在しません。\n{img_dir}", img_dir=args.img_dir, decoration=MLogger.DECORATION_BOX)
@@ -144,7 +141,7 @@ def get_args_parser():
                         help='path where to save, empty for no saving')
     parser.add_argument('--data_dir', default='C:/Users/shihaozou/Desktop/exps/seq3',
                         help='path where to save, empty for no saving')
-    parser.add_argument('--resume', default="models/model/12-06_20-17-34/checkpoint.pth",
+    parser.add_argument('--resume', default=os.path.abspath(os.path.join(__file__, "../../../data/model/12-06_20-17-34/checkpoint.pth")),
                         help='resume from checkpoint')
     parser.add_argument('--vis_heatmap_frame_name', default=None,
                         help='visualize heatmap of a frame, None means all the sampled frames')

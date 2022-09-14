@@ -19,7 +19,7 @@ def execute(args):
         logger.info("動画準備開始", decoration=MLogger.DECORATION_BOX)
 
         if not os.path.exists(args.video_file):
-            logger.error("指定されたファイルパスが存在しません。\n{0}", args.video_file, decoration=MLogger.DECORATION_BOX)
+            logger.error("指定されたファイルパスが存在しません。\n{video_file}", video_file=args.video_file, decoration=MLogger.DECORATION_BOX)
             return False, None
 
         # 親パス(指定がなければ動画のある場所。Colabはローカルで作成するので指定あり想定)
@@ -122,9 +122,6 @@ def execute(args):
             interpolations = np.arange(0, count + 1, fps / 30)
 
             for kidx, k in enumerate(tqdm(interpolations)):
-                # 30fps用にディレクトリ作成
-                os.makedirs(os.path.join(process_img_dir, "frames", f"{kidx:012}"), exist_ok=True)
-
                 # コピー対象の画像パス
                 target_path = resize_img_path.format(round(k))
 
