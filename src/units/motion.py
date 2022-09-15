@@ -18,7 +18,7 @@ from tqdm import tqdm
 
 logger = MLogger(__name__)
 
-MIKU_METER = 12.5 / 10000
+MIKU_METER = 12.5 / 10
 
 
 def execute(args):
@@ -98,11 +98,12 @@ def execute(args):
                 for jname, joint in frames.items():
                     if jname not in target_bone_vecs:
                         target_bone_vecs[jname] = {}
-                    target_bone_vecs[jname][fno] = (
-                        np.array(
-                            [float(joint["x"]), float(joint["y"]), float(joint["z"])]
-                        )
-                        * MIKU_METER
+                    target_bone_vecs[jname][fno] = np.array(
+                        [
+                            float(joint["x"]) * MIKU_METER / 40,
+                            float(joint["y"]) * MIKU_METER / 40,
+                            -float(joint["z"]) * MIKU_METER * 6,
+                        ]
                     )
 
                 # 下半身
@@ -158,9 +159,32 @@ def execute(args):
                         bf = VmdBoneFrame(
                             name=pconn["mmd"],
                             index=fno,
-                            position=MVector3D(bone_vec[0], bone_vec[1], bone_vec[2]),
                             regist=True,
                         )
+
+                        parent_vec = MVector3D(
+                            target_bone_vecs.get(pconn["parent"], {}).get(
+                                fno, np.array([0, 0, 0])
+                            )
+                        )
+                        parent_bone_name = PMX_CONNECTIONS.get(pconn["parent"], {}).get(
+                            "mmd", None
+                        )
+                        parent_bone_position = MVector3D()
+                        if parent_bone_name in trace_model.bones:
+                            parent_bone_position = trace_model.bones[
+                                parent_bone_name
+                            ].position
+
+                        bf.position = (
+                            MVector3D(bone_vec)
+                            - parent_vec
+                            - (
+                                trace_model.bones[pconn["mmd"]].position
+                                - parent_bone_position
+                            )
+                        )
+
                         trace_mov_motion.bones.append(bf)
                         pchar.update(1)
 
@@ -267,7 +291,7 @@ def read_bone_csv(bone_csv_path: str):
 PMX_CONNECTIONS = {
     "root": {
         "mmd": "上半身",
-        "parent": "グルーブ",
+        "parent": None,
         "tail": "spine2",
         "display": "体幹",
         "axis": None,
@@ -275,7 +299,7 @@ PMX_CONNECTIONS = {
     "spine2": {
         "mmd": "上半身2",
         "parent": "root",
-        "tail": "neck",
+        "tail": "head_bottom",
         "display": "体幹",
         "axis": None,
     },
@@ -288,7 +312,7 @@ PMX_CONNECTIONS = {
     },
     "nose": {
         "mmd": "頭",
-        "parent": "neck",
+        "parent": "head_bottom",
         "tail": "head_tail",
         "display": "体幹",
         "axis": MVector3D(1, 0, 0),
@@ -352,7 +376,7 @@ PMX_CONNECTIONS = {
     },
     "pelvis": {
         "mmd": "下半身",
-        "parent": "グルーブ",
+        "parent": None,
         "tail": "pelvis2",
         "display": "体幹",
         "axis": None,

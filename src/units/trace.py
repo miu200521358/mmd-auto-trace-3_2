@@ -1,11 +1,14 @@
 import argparse
 import os
 import sys
+from glob import glob
 
 sys.path.append(os.path.abspath(os.path.join(__file__, "../../Snipper")))
 
+import cv2
 import torch
 from base.logger import MLogger
+from PIL import Image
 from Snipper.inference_utils import (
     associate_snippets,
     get_all_samples,
@@ -181,6 +184,21 @@ def execute(args):
             argv.max_depth,
             argv.seq_gap,
         )
+
+        logger.info("姿勢推定結果生成開始", decoration=MLogger.DECORATION_LINE)
+
+        frames = glob(os.path.join(argv.output_dir, "track2d", "*.*"))
+        img = Image.open(frames[0])
+
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        out = cv2.VideoWriter(argv.output_dir, fourcc, 30.0, (img.size[0], img.size[1]))
+
+        for process_img_path in tqdm(frames):
+            # トラッキングmp4合成
+            out.write(cv2.imread(process_img_path))
+
+        out.release()
+        cv2.destroyAllWindows()
 
         logger.info(
             "姿勢推定結果保存完了: {output_dir}",

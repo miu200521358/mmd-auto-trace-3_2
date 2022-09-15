@@ -96,3 +96,6 @@ msgstr ""
 msgid "【No.{oidx}】モーション(移動)生成開始【{path}】"
 msgstr ""
 
+msgid "姿勢推定結果生成開始"
+msgstr ""
+

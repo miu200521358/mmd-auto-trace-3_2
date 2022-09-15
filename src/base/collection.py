@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, TypeVar
 
 import numpy as np
+
 from base.base import BaseModel, Encoding
 from base.part import BaseIndexModel, BaseIndexNameModel
 
@@ -165,6 +166,9 @@ class BaseIndexNameListModel(Generic[TBaseIndexNameModel]):
         if self.__iter_index >= len(self.data):
             raise StopIteration
         return self.data[self.__iter_index]
+
+    def __contains__(self, v) -> bool:
+        return v in [v.name for v in self.data]
 
 
 class BaseIndexDictModel(Generic[TBaseIndexModel]):
