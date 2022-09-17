@@ -111,3 +111,12 @@ msgstr ""
 msgid "mediapipe推定で予期せぬエラーが発生しました。"
 msgstr ""
 
+msgid "【No.{oidx}】mediapipe推定結果出力"
+msgstr ""
+
+msgid "【No.{oidx}】関節スムージング準備開始"
+msgstr ""
+
+msgid "【No.{oidx}】関節スムージング出力開始"
+msgstr ""
+

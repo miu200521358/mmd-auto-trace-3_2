@@ -52,6 +52,12 @@ def execute(args):
             for oidx, snipper_persion_json_path in enumerate(
                 sorted(glob(os.path.join(args.img_dir, "snipper", "json", "*.json")))
             ):
+                logger.info(
+                    "【No.{oidx}】mediapipe推定開始",
+                    oidx=f"{oidx:02}",
+                    decoration=MLogger.DECORATION_LINE,
+                )
+
                 json_datas = {}
                 with open(snipper_persion_json_path, "r") as f:
                     json_datas = json.load(f)
@@ -93,51 +99,60 @@ def execute(args):
                         and results.pose_world_landmarks
                         and results.pose_world_landmarks.landmark
                     ):
-                        frame_json_data["mp_body_joints"] = {}
+                        frame_json_data["mp_body_joints"] = {"joints": {}}
+                        frame_json_data["mp_body_world_joints"] = {"joints": {}}
                         for landmark, world_landmark, output_name in zip(
                             results.pose_landmarks.landmark,
                             results.pose_world_landmarks.landmark,
                             POSE_LANDMARKS,
                         ):
-                            frame_json_data["mp_body_joints"][output_name] = {
+                            frame_json_data["mp_body_joints"]["joints"][output_name] = {
                                 "x": -float(landmark.x),
                                 "y": -float(landmark.y),
                                 "z": float(landmark.z),
-                                "wx": -float(world_landmark.x),
-                                "wy": -float(world_landmark.y),
-                                "wz": float(world_landmark.z),
                                 "visibility": float(landmark.visibility),
+                            }
+                            frame_json_data["mp_body_world_joints"]["joints"][
+                                output_name
+                            ] = {
+                                "x": -float(world_landmark.x),
+                                "y": -float(world_landmark.y),
+                                "z": float(world_landmark.z),
                             }
 
                         if results.right_hand_landmarks:
-                            frame_json_data["mp_left_hand_joints"] = {}
+                            frame_json_data["mp_left_hand_joints"] = {"joints": {}}
                             for landmark, output_name in zip(
                                 results.right_hand_landmarks.landmark,
                                 HAND_LANDMARKS,
                             ):
-                                frame_json_data["mp_left_hand_joints"][output_name] = {
+                                frame_json_data["mp_left_hand_joints"]["joints"][
+                                    output_name
+                                ] = {
                                     "x": -float(landmark.x),
                                     "y": -float(landmark.y),
                                     "z": float(landmark.z),
                                 }
 
                         if results.left_hand_landmarks:
-                            frame_json_data["mp_right_hand_joints"] = {}
+                            frame_json_data["mp_right_hand_joints"] = {"joints": {}}
                             for landmark, output_name in zip(
                                 results.left_hand_landmarks.landmark, HAND_LANDMARKS
                             ):
-                                frame_json_data["mp_right_hand_joints"][output_name] = {
+                                frame_json_data["mp_right_hand_joints"]["joints"][
+                                    output_name
+                                ] = {
                                     "x": -float(landmark.x),
                                     "y": -float(landmark.y),
                                     "z": float(landmark.z),
                                 }
 
                         if results.face_landmarks:
-                            frame_json_data["mp_face_joints"] = {}
+                            frame_json_data["mp_face_joints"] = {"joints": {}}
                             for lidx, landmark in enumerate(
                                 results.face_landmarks.landmark
                             ):
-                                frame_json_data["mp_face_joints"][lidx] = {
+                                frame_json_data["mp_face_joints"]["joints"][lidx] = {
                                     "x": -float(landmark.x),
                                     "y": -float(landmark.y),
                                     "z": float(landmark.z),
@@ -149,7 +164,7 @@ def execute(args):
 
                 logger.info(
                     "【No.{oidx}】mediapipe推定結果出力",
-                    f"{oidx:03}",
+                    oidx=f"{oidx:02}",
                     decoration=MLogger.DECORATION_LINE,
                 )
 

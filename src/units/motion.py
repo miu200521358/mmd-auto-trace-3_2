@@ -185,6 +185,12 @@ def execute(args):
                 trace_mov_model.name, trace_mov_motion, trace_mov_motion_path
             )
 
+        logger.info(
+            "モーション結果保存完了: {motion_dir_path}",
+            motion_dir_path=motion_dir_path,
+            decoration=MLogger.DECORATION_BOX,
+        )
+
         return True
     except Exception as e:
         logger.critical("姿勢推定で予期せぬエラーが発生しました。", e, decoration=MLogger.DECORATION_BOX)
