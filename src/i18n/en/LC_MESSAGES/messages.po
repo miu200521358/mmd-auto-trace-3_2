@@ -18,58 +18,91 @@ msgstr ""
 
 msgid "MMD自動トレース開始\n　処理対象映像ファイル: {video_file}\n　処理内容: {process}"
 msgstr "MMD auto trace start\nProcessing target video file: {video_file}\nProcessing content: {process}"
+
 msgid "動画準備開始"
 msgstr "Video ready"
 
 msgid "【初回チェック】\n　ファイル名: {video_file}, ファイルサイズ: {size}, 横: {W}, 縦: {H}, フレーム数: {count}, fps: {fps}"
 msgstr "[First check]\nFile name: {video_file}, File size: {size}, Horizontal: {W}, Vertical: {H}, Number of frames: {count}, fps: {fps}"
+
 msgid "元動画読み込み開始"
 msgstr "Start loading original video"
 
 msgid "入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}x{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}"
 msgstr "The input video size is not divisible by 40 after adjustment.Before adjustment({W}x{H}) -> After adjustment({width}x{org_height})\nIt will be the appropriate size({height}) Fill top edge up to \n{video_file}"
+
 msgid "補間生成開始"
 msgstr "Start interpolation generation"
 
 msgid "【再チェック】\n　準備フォルダ: {process_img_dir}, 横: {width}, 縦: {height}, フレーム数: {last}, fps: {fps}"
 msgstr "[Recheck]\n Preparation folder: {process_img_dir}, Width: {width}, Height: {height}, Number of frames: {last}, fps: {fps}"
+
 msgid "動画準備完了: {process_img_dir}"
 msgstr "Video ready: {process_img_dir}"
 msgid "指定されたファイルパスが存在しません。\n{video_file}"
 msgstr "The specified file path does not exist.\n{video_file}"
+
 msgid "MMD自動トレース終了\n　処理対象映像ファイル: {video_file}\n　処理内容: {process}\n　トレース結果: {img_dir}\n　処理時間: {elapsed_time}"
 msgstr "MMD auto trace end\n　Processing target video file: {video_file}\nProcessing content: {process}\nTrace result: {img_dir}\nProcessing time: {elapsed_time}"
+
 msgid "指定された学習モデルが存在しません\n{resume}"
 msgstr "The specified learning model does not exist\n{resume}"
+
 msgid "人物姿勢推定開始: {img_dir}"
 msgstr "Start human pose estimation: {img_dir}"
+
 msgid "学習モデル準備完了: {resume}"
 msgstr "Learning model ready: {resume}"
+
 msgid "姿勢推定で予期せぬエラーが発生しました。"
 msgstr "Unexpected error in pose estimation."
+
 msgid "姿勢推定の関連付け"
 msgstr "Pose Estimation Association"
+
 msgid "姿勢推定の関連付け完了"
 msgstr "Pose Estimation Association Completed"
+
 msgid "姿勢推定結果保存"
 msgstr "Save Posture Estimation Result"
+
 msgid "姿勢推定結果保存完了: {output_dir}"
 msgstr "Posture estimation result saved: {output_dir}"
+
 msgid "関節スムージング処理開始: {img_dir}"
 msgstr "Start joint smoothing process: {img_dir}"
+
 msgid "関節スムージング処理終了: {0}"
 msgstr "End of joint smoothing process: {0}"
+
 msgid "関節スムージング処理終了: {img_dir}"
 msgstr "Finished joint smoothing: {img_dir}"
+
 msgid "【No.{oidx}】関節スムージング開始"
 msgstr "[No.{oidx}] Joint smoothing start"
+
 msgid "関節スムージングで予期せぬエラーが発生しました。"
 msgstr "Unexpected error in joint smoothing."
+
 msgid "モーション生成処理開始: {img_dir}"
 msgstr "Motion generation process started: {img_dir}"
+
 msgid "【No.{oidx}】モーション結果位置計算開始"
 msgstr "[No.{oidx}]Motion result position calculation start"
+
 msgid "【No.{oidx}】モーション(移動)計算開始"
 msgstr "[No.{oidx}] motion (movement) calculation start"
+
 msgid "【No.{oidx}】モーション(移動)生成開始【{path}】"
 msgstr "[No.{oidx}] motion (movement) generation start [{path}]"
+
+msgid "姿勢推定結果生成開始"
+msgstr "Start generating attitude estimation result"
+msgid "mediapipe推定処理開始: {img_dir}"
+msgstr "Start mediapipe estimation process: {img_dir}"
+msgid "【No.{oidx}】mediapipe推定開始"
+msgstr "[No.{oidx}] start mediapipe estimation"
+msgid "mediapipe推定処理終了: {output_dir}"
+msgstr "mediapipe estimation process finished: {output_dir}"
+msgid "mediapipe推定で予期せぬエラーが発生しました。"
+msgstr "Unexpected error in mediapipe estimation."
