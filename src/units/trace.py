@@ -142,19 +142,19 @@ def execute(args):
                         }
                     )
 
-                    _heatmaps = [
-                        heatmap[i].mean(dim=-2) for heatmap in outputs["heatmaps"]
-                    ]
-                    heatmaps = _heatmaps[0].cpu().numpy()  # [T, h, w, num_joints]
-                    _, _, h, w = imgs.shape
-                    imgs = (
-                        imgs[0].reshape(-1, 3, h, w).permute(0, 2, 3, 1).cpu().numpy()
-                    )
-                    for t in range(argv.num_frames):
-                        results_heatmaps[filenames[t]] = (
-                            heatmaps[t],
-                            imgs[t],
-                        )  # [h, w, num_joints]
+                    # _heatmaps = [
+                    #     heatmap[i].mean(dim=-2) for heatmap in outputs["heatmaps"]
+                    # ]
+                    # heatmaps = _heatmaps[0].cpu().numpy()  # [T, h, w, num_joints]
+                    # _, _, h, w = imgs.shape
+                    # imgs = (
+                    #     imgs[0].reshape(-1, 3, h, w).permute(0, 2, 3, 1).cpu().numpy()
+                    # )
+                    # for t in range(argv.num_frames):
+                    #     results_heatmaps[filenames[t]] = (
+                    #         heatmaps[t],
+                    #         imgs[t],
+                    #     )  # [h, w, num_joints]
 
         logger.info("姿勢推定の関連付け", decoration=MLogger.DECORATION_LINE)
 

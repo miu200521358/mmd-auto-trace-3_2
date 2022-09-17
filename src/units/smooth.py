@@ -28,7 +28,7 @@ def execute(args):
 
         # 全人物分の順番別フォルダ
         ordered_person_file_pathes = sorted(
-            glob(os.path.join(args.img_dir, "trace", "track3d", "*.json"))
+            glob(os.path.join(args.img_dir, "trace", "json", "*.json"))
         )
         os.makedirs(os.path.join(args.img_dir, "smooth"), exist_ok=True)
 
@@ -58,18 +58,20 @@ def execute(args):
                     if (jname, "z") not in all_joints:
                         all_joints[(jname, "z")] = {}
 
-                    if (jname, "d") not in all_joints:
-                        all_joints[(jname, "d")] = {}
+                    if (jname, "score") not in all_joints:
+                        all_joints[(jname, "score")] = {}
 
                     all_joints[(jname, "x")][fno] = float(joint["x"])
                     all_joints[(jname, "y")][fno] = float(joint["y"])
                     all_joints[(jname, "z")][fno] = float(joint["z"])
-                    all_joints[(jname, "d")][fno] = float(joint["d"])
+                    all_joints[(jname, "score")][fno] = float(joint["score"])
 
             # スムージング
             for (jname, axis), joints in tqdm(
                 all_joints.items(), desc=f"Filter No.{oidx:02} ... "
             ):
+                if axis == "score":
+                    continue
                 filter = OneEuroFilter(
                     freq=30, mincutoff=1, beta=0.00000000001, dcutoff=1
                 )
@@ -88,7 +90,9 @@ def execute(args):
                     frame_joints[fidx][jname]["x"] = str(all_joints[(jname, "x")][fno])
                     frame_joints[fidx][jname]["y"] = str(all_joints[(jname, "y")][fno])
                     frame_joints[fidx][jname]["z"] = str(all_joints[(jname, "z")][fno])
-                    frame_joints[fidx][jname]["d"] = str(all_joints[(jname, "d")][fno])
+                    frame_joints[fidx][jname]["score"] = str(
+                        all_joints[(jname, "score")][fno]
+                    )
 
             with open(smoothed_person_file_path, "w", encoding="utf-8") as f:
                 json.dump(frame_joints, f, indent=4)
