@@ -123,3 +123,15 @@ msgstr ""
 msgid "【No.{oidx}】関節スムージング合成開始"
 msgstr ""
 
+msgid "snipper姿勢推定開始"
+msgstr ""
+
+msgid "姿勢推定結果保存(2D)"
+msgstr ""
+
+msgid "姿勢推定結果保存(3D)"
+msgstr ""
+
+msgid "姿勢推定結果保存(動画)"
+msgstr ""
+

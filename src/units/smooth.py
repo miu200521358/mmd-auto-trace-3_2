@@ -3,6 +3,7 @@ import os
 import re
 from glob import glob
 
+import numpy as np
 from base.logger import MLogger
 from mmd.vmd.filter import OneEuroFilter
 from tqdm import tqdm
@@ -132,25 +133,75 @@ def execute(args):
             for fidx, frame_json_data in tqdm(
                 frame_joints.items(), desc=f"No.{oidx:02} ... "
             ):
-                mix_joints[fidx] = {"body": {}}
-                z = float(frame_json_data["snipper"]["joints"]["root"]["z"])
-                
-                if "mp_body_joints" not in frame_json_data:
+                mix_joints[fidx] = {"root": frame_json_data["snipper"]["joints"]["root"], "body": {}}
+
+                if "mp_body_world_joints" not in frame_json_data:
                     continue
 
-                for jname, joint in frame_json_data["mp_body_joints"]["joints"].items():
+                mix_joints[fidx]["body"] = frame_json_data["mp_body_world_joints"]["joints"]
+
+                for jname in [
+                    "pelvis",
+                    "pelvis_tail",
+                    "spine",
+                    "neck",
+                    "head",
+                    "head_tail",
+                    "left_collar",
+                    "right_collar",
+                ]:
                     mix_joints[fidx]["body"][jname] = {}
-                    for axis in ["x", "y", "z"]:
-                        mix_joints[fidx]["body"][jname][axis] = float(joint[axis]) + (
-                            z if axis == "z" else 0
-                        )
+
+                for axis in ["x", "y", "z"]:
+                    # 下半身
+                    mix_joints[fidx]["body"]["pelvis"][axis] = np.mean(
+                        [
+                            mix_joints[fidx]["body"]["left_hip"][axis],
+                            mix_joints[fidx]["body"]["right_hip"][axis],
+                        ]
+                    )
+                    # 上半身
+                    mix_joints[fidx]["body"]["spine"][axis] = np.mean(
+                        [
+                            mix_joints[fidx]["body"]["left_hip"][axis],
+                            mix_joints[fidx]["body"]["right_hip"][axis],
+                        ]
+                    )
+                    # 首
+                    mix_joints[fidx]["body"]["neck"][axis] = np.mean(
+                        [
+                            mix_joints[fidx]["body"]["left_shoulder"][axis],
+                            mix_joints[fidx]["body"]["right_shoulder"][axis],
+                        ]
+                    )
+                    # 左肩
+                    mix_joints[fidx]["body"]["left_collar"][axis] = np.mean(
+                        [
+                            mix_joints[fidx]["body"]["left_shoulder"][axis],
+                            mix_joints[fidx]["body"]["right_shoulder"][axis],
+                        ]
+                    )
+                    # 右肩
+                    mix_joints[fidx]["body"]["right_collar"][axis] = np.mean(
+                        [
+                            mix_joints[fidx]["body"]["left_shoulder"][axis],
+                            mix_joints[fidx]["body"]["right_shoulder"][axis],
+                        ]
+                    )
+                    # 頭
+                    mix_joints[fidx]["body"]["head"][axis] = np.mean(
+                        [
+                            mix_joints[fidx]["body"]["left_ear"][axis],
+                            mix_joints[fidx]["body"]["right_ear"][axis],
+                        ]
+                    )
 
                 for direction in ["left", "right"]:
                     body_wrist_jname = f"body_{direction}_wrist"
                     hand_jtype = f"mp_{direction}_hand_joints"
                     if (
                         body_wrist_jname
-                        not in frame_json_data["mp_body_joints"]["joints"]
+                        not in frame_json_data["mp_body_world_joints"]["joints"]
                         or hand_jtype not in frame_json_data
                     ):
                         continue
@@ -159,7 +210,7 @@ def execute(args):
                     hand_root_vec = {}
                     for axis in ["x", "y", "z"]:
                         hand_root_vec[axis] = float(
-                            frame_json_data["mp_body_joints"]["joints"][
+                            frame_json_data["mp_body_world_joints"]["joints"][
                                 body_wrist_jname
                             ][axis]
                             - frame_json_data[hand_jtype]["joints"]["wrist"][axis]
@@ -176,8 +227,8 @@ def execute(args):
                             ) + float(hand_root_vec[axis])
 
                 if "mp_face_joints" in frame_json_data:
-                    mix_joints[fidx]["mp_face_joints"] = frame_json_data[
-                        "mp_face_joints"
+                    mix_joints[fidx]["face"] = frame_json_data["mp_face_joints"][
+                        "joints"
                     ]
 
             with open(

@@ -81,7 +81,12 @@ def execute(args):
             argv
         )  # snippet of images
 
-        results, results_heatmaps = [], {}
+        logger.info(
+            "snipper姿勢推定開始",
+            decoration=MLogger.DECORATION_LINE,
+        )
+
+        results = []
         with torch.set_grad_enabled(
             False
         ):  # deactivate autograd to reduce memory usage
@@ -142,20 +147,6 @@ def execute(args):
                         }
                     )
 
-                    # _heatmaps = [
-                    #     heatmap[i].mean(dim=-2) for heatmap in outputs["heatmaps"]
-                    # ]
-                    # heatmaps = _heatmaps[0].cpu().numpy()  # [T, h, w, num_joints]
-                    # _, _, h, w = imgs.shape
-                    # imgs = (
-                    #     imgs[0].reshape(-1, 3, h, w).permute(0, 2, 3, 1).cpu().numpy()
-                    # )
-                    # for t in range(argv.num_frames):
-                    #     results_heatmaps[filenames[t]] = (
-                    #         heatmaps[t],
-                    #         imgs[t],
-                    #     )  # [h, w, num_joints]
-
         logger.info("姿勢推定の関連付け", decoration=MLogger.DECORATION_LINE)
 
         all_frames_results, max_pid = associate_snippets(
@@ -164,7 +155,7 @@ def execute(args):
 
         logger.info("姿勢推定の関連付け完了", decoration=MLogger.DECORATION_LINE)
 
-        logger.info("姿勢推定結果保存", decoration=MLogger.DECORATION_LINE)
+        logger.info("姿勢推定結果保存(2D)", decoration=MLogger.DECORATION_LINE)
 
         save_visual_results_2d(
             all_frames_results,
@@ -175,6 +166,9 @@ def execute(args):
             argv.max_depth,
             argv.seq_gap,
         )
+
+        logger.info("姿勢推定結果保存(3D)", decoration=MLogger.DECORATION_LINE)
+
         save_results_3d(
             all_frames_results,
             all_filenames,
@@ -185,7 +179,7 @@ def execute(args):
             argv.seq_gap,
         )
 
-        logger.info("姿勢推定結果生成開始", decoration=MLogger.DECORATION_LINE)
+        logger.info("姿勢推定結果保存(動画)", decoration=MLogger.DECORATION_LINE)
 
         frames = glob(os.path.join(argv.output_dir, "track2d", "*.*"))
         img = Image.open(frames[0])

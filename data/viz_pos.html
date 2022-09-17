@@ -104,7 +104,8 @@
             var max_fno = 0;
 
             Object.keys(jsonData).forEach(function (fno) {
-              var bf_json = jsonData[fno];
+              var root_json = jsonData[fno]["root"];
+              var bf_json = jsonData[fno]["body"];
               var bf_list = [];
               max_fno = fno;
               Object.keys(bf_json).forEach(function (bone_name) {
@@ -114,10 +115,10 @@
                 var x = parseFloat(bf.x);
                 var y = parseFloat(bf.y);
                 var z = parseFloat(bf.z);
-                bf.x = x;
+                bf.x = x * 100 + root_json.x;
                 // yz 逆転
-                bf.y = z;
-                bf.z = y;
+                bf.z = y * 100 + root_json.y;
+                bf.y = z * 100 + root_json.z * 100;
                 bf_list.push(bf);
 
                 if (bf.x > max_x) { max_x = bf.x };
@@ -222,11 +223,11 @@
         bone_names[key] = poslist[i].name
       }
 
-      var order = [['nose', 'head_bottom', 'root'],
-      ['head_bottom', 'left_shoulder', 'left_elbow', 'left_wrist'],
-      ['head_bottom', 'right_shoulder', 'right_elbow', 'right_wrist'],
-      ['root', 'right_hip', 'right_knee', 'right_ankle'],
-      ['root', 'left_hip', 'left_knee', 'left_ankle']];
+      var order = [['head', 'neck', 'pelvis'],
+      ['left_collar', 'left_shoulder', 'left_elbow', 'body_left_wrist', 'body_left_index'],
+      ['right_collar', 'right_shoulder', 'right_elbow', 'body_right_wrist', 'body_right_index'],
+      ['pelvis', 'right_hip', 'right_knee', 'right_ankle', 'right_foot_index'],
+      ['pelvis', 'left_hip', 'left_knee', 'left_ankle', 'left_foot_index']];
       var x = [];
       var y = [];
       var z = [];
@@ -402,7 +403,7 @@
 </head>
 
 <body>
-  <div id="dropzone" effectAllowed="move">Drop "xx.json" file here!
+  <div id="dropzone" effectAllowed="move">Drop "mix/xx.json" file here!
   </div>
   <div id="set3d" class="setzone">
     <table>
