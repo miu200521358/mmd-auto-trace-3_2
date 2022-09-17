@@ -98,11 +98,24 @@ msgstr "[No.{oidx}] motion (movement) generation start [{path}]"
 
 msgid "姿勢推定結果生成開始"
 msgstr "Start generating attitude estimation result"
+
 msgid "mediapipe推定処理開始: {img_dir}"
 msgstr "Start mediapipe estimation process: {img_dir}"
+
 msgid "【No.{oidx}】mediapipe推定開始"
 msgstr "[No.{oidx}] start mediapipe estimation"
+
 msgid "mediapipe推定処理終了: {output_dir}"
 msgstr "mediapipe estimation process finished: {output_dir}"
+
 msgid "mediapipe推定で予期せぬエラーが発生しました。"
 msgstr "Unexpected error in mediapipe estimation."
+
+msgid "【No.{oidx}】mediapipe推定結果出力"
+msgstr "[No.{oidx}] mediapipe estimation result output"
+msgid "【No.{oidx}】関節スムージング準備開始"
+msgstr "[No.{oidx}] Start preparation for joint smoothing"
+msgid "【No.{oidx}】関節スムージング出力開始"
+msgstr "[No.{oidx}] Joint smoothing output start"
+msgid "【No.{oidx}】関節スムージング合成開始"
+msgstr "[No.{oidx}] Joint smoothing synthesis start"

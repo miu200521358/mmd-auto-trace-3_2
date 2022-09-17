@@ -36,6 +36,8 @@ def execute(args):
 
         os.makedirs(os.path.join(args.img_dir, "smooth"), exist_ok=True)
 
+        os.makedirs(os.path.join(args.img_dir, "mix"), exist_ok=True)
+
         for oidx, mediapipe_file_path in enumerate(
             sorted(glob(os.path.join(args.img_dir, "mediapipe", "json", "*.json")))
         ):
@@ -113,13 +115,77 @@ def execute(args):
                         )
                         pchar.update(1)
 
-            # 出力先ソート済みファイル
-            smoothed_person_file_path = os.path.join(
-                args.img_dir, "smooth", f"{oidx:02}.json"
+            with open(
+                os.path.join(args.img_dir, "smooth", f"{oidx:02}.json"),
+                "w",
+                encoding="utf-8",
+            ) as f:
+                json.dump(frame_joints, f, indent=4)
+
+            logger.info(
+                "【No.{oidx}】関節スムージング合成開始",
+                oidx=f"{oidx:02}",
+                decoration=MLogger.DECORATION_LINE,
             )
 
-            with open(smoothed_person_file_path, "w", encoding="utf-8") as f:
-                json.dump(frame_joints, f, indent=4)
+            mix_joints = {}
+            for fidx, frame_json_data in tqdm(
+                frame_joints.items(), desc=f"No.{oidx:02} ... "
+            ):
+                mix_joints[fidx] = {"body": {}}
+                z = float(frame_json_data["snipper"]["joints"]["root"]["z"])
+                
+                if "mp_body_joints" not in frame_json_data:
+                    continue
+
+                for jname, joint in frame_json_data["mp_body_joints"]["joints"].items():
+                    mix_joints[fidx]["body"][jname] = {}
+                    for axis in ["x", "y", "z"]:
+                        mix_joints[fidx]["body"][jname][axis] = float(joint[axis]) + (
+                            z if axis == "z" else 0
+                        )
+
+                for direction in ["left", "right"]:
+                    body_wrist_jname = f"body_{direction}_wrist"
+                    hand_jtype = f"mp_{direction}_hand_joints"
+                    if (
+                        body_wrist_jname
+                        not in frame_json_data["mp_body_joints"]["joints"]
+                        or hand_jtype not in frame_json_data
+                    ):
+                        continue
+
+                    hand_root_jname = f"{direction}_hand"
+                    hand_root_vec = {}
+                    for axis in ["x", "y", "z"]:
+                        hand_root_vec[axis] = float(
+                            frame_json_data["mp_body_joints"]["joints"][
+                                body_wrist_jname
+                            ][axis]
+                            - frame_json_data[hand_jtype]["joints"]["wrist"][axis]
+                        )
+
+                    if hand_root_jname not in mix_joints[fidx]:
+                        mix_joints[fidx][hand_root_jname] = {}
+
+                    for jname, jvalues in frame_json_data[hand_jtype]["joints"].items():
+                        mix_joints[fidx][hand_root_jname][jname] = {}
+                        for axis in ["x", "y", "z"]:
+                            mix_joints[fidx][hand_root_jname][jname][axis] = float(
+                                jvalues[axis]
+                            ) + float(hand_root_vec[axis])
+
+                if "mp_face_joints" in frame_json_data:
+                    mix_joints[fidx]["mp_face_joints"] = frame_json_data[
+                        "mp_face_joints"
+                    ]
+
+            with open(
+                os.path.join(args.img_dir, "mix", f"{oidx:02}.json"),
+                "w",
+                encoding="utf-8",
+            ) as f:
+                json.dump(mix_joints, f, indent=4)
 
         logger.info(
             "関節スムージング処理終了: {img_dir}",

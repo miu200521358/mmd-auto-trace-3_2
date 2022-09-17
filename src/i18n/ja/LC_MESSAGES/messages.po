@@ -98,11 +98,24 @@ msgstr "【No.{oidx}】モーション(移動)生成開始【{path}】"
 
 msgid "姿勢推定結果生成開始"
 msgstr "姿勢推定結果生成開始"
+
 msgid "mediapipe推定処理開始: {img_dir}"
 msgstr "mediapipe推定処理開始: {img_dir}"
+
 msgid "【No.{oidx}】mediapipe推定開始"
 msgstr "【No.{oidx}】mediapipe推定開始"
+
 msgid "mediapipe推定処理終了: {output_dir}"
 msgstr "mediapipe推定処理終了: {output_dir}"
+
 msgid "mediapipe推定で予期せぬエラーが発生しました。"
 msgstr "mediapipe推定で予期せぬエラーが発生しました。"
+
+msgid "【No.{oidx}】mediapipe推定結果出力"
+msgstr "【No.{oidx}】mediapipe推定結果出力"
+msgid "【No.{oidx}】関節スムージング準備開始"
+msgstr "【No.{oidx}】関節スムージング準備開始"
+msgid "【No.{oidx}】関節スムージング出力開始"
+msgstr "【No.{oidx}】関節スムージング出力開始"
+msgid "【No.{oidx}】関節スムージング合成開始"
+msgstr "【No.{oidx}】関節スムージング合成開始"
