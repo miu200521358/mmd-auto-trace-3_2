@@ -104,9 +104,15 @@ if __name__ == "__main__":
 
         result, args.img_dir = execute(args)
 
-    if result and "trace" in args.process:
-        # exposeによる人物推定
-        from units.trace import execute
+    if result and "snipper" in args.process:
+        # snipperによる人物推定
+        from units.snipper import execute
+
+        result = execute(args)
+
+    if result and "mediapipe" in args.process:
+        # mediapipeによる人物推定
+        from units.mediapipe import execute
 
         result = execute(args)
 

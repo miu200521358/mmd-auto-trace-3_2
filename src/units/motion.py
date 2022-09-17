@@ -6,7 +6,7 @@ from datetime import datetime
 from glob import glob
 
 import numpy as np
-from base.logger import MLogger, get_file_encoding
+from base.logger import MLogger
 from base.math import MVector3D
 from mmd.pmx.collection import PmxModel
 from mmd.pmx.part import Bone, Ik, IkLink

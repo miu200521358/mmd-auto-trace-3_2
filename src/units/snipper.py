@@ -43,10 +43,10 @@ def execute(args):
         parser = get_args_parser()
         argv = parser.parse_args(args=[])
 
+        argv.max_depth = 30
         argv.data_dir = os.path.join(args.img_dir, "frames")
-        argv.output_dir = os.path.join(args.img_dir, "trace")
+        argv.output_dir = os.path.join(args.img_dir, "snipper")
         os.makedirs(argv.output_dir, exist_ok=True)
-        argv.seq_gap = 1
 
         if not os.path.exists(args.img_dir):
             logger.error(
@@ -191,7 +191,12 @@ def execute(args):
         img = Image.open(frames[0])
 
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        out = cv2.VideoWriter(argv.output_dir, fourcc, 30.0, (img.size[0], img.size[1]))
+        out = cv2.VideoWriter(
+            os.path.join(argv.output_dir, "snipper.mp4"),
+            fourcc,
+            30.0,
+            (img.size[0], img.size[1]),
+        )
 
         for process_img_path in tqdm(frames):
             # トラッキングmp4合成
@@ -272,13 +277,13 @@ def get_args_parser():
     parser.add_argument(
         "--input_height", default=600, type=int, help="input image shape (H, W)"
     )
-    parser.add_argument("--max_depth", type=int, default=15)
+    parser.add_argument("--max_depth", type=int, default=45)
     parser.add_argument("--num_frames", default=4, type=int, help="Number of frames")
     parser.add_argument(
         "--num_future_frames", default=0, type=int, help="Number of frames"
     )
     parser.add_argument(
-        "--seq_gap", default=5, type=int, help="Number of maximum gap frames"
+        "--seq_gap", default=1, type=int, help="Number of maximum gap frames"
     )
     parser.add_argument("--num_workers", type=int, default=4)
 

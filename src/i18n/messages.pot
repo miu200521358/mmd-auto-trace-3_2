@@ -99,3 +99,15 @@ msgstr ""
 msgid "姿勢推定結果生成開始"
 msgstr ""
 
+msgid "mediapipe推定処理開始: {img_dir}"
+msgstr ""
+
+msgid "【No.{oidx}】mediapipe推定開始"
+msgstr ""
+
+msgid "mediapipe推定処理終了: {output_dir}"
+msgstr ""
+
+msgid "mediapipe推定で予期せぬエラーが発生しました。"
+msgstr ""
+

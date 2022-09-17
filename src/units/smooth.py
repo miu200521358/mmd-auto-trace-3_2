@@ -28,7 +28,7 @@ def execute(args):
 
         # 全人物分の順番別フォルダ
         ordered_person_file_pathes = sorted(
-            glob(os.path.join(args.img_dir, "trace", "json", "*.json"))
+            glob(os.path.join(args.img_dir, "trace", "mediapipe", "*.json"))
         )
         os.makedirs(os.path.join(args.img_dir, "smooth"), exist_ok=True)
 

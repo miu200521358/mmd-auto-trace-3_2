@@ -5,6 +5,9 @@ opencv_python==4.6.0.66
 matplotlib==3.5.3
 imageio==2.21.3
 
+# mediapipe
+mediapipe==0.8.11
+
 Babel==2.10.3
 numpy-quaternion==2022.4.2
 bezier==2021.2.12
