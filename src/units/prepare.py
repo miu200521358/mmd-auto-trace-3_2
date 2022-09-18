@@ -6,10 +6,10 @@ import warnings
 
 import cv2
 import numpy as np
+from base.logger import MLogger
 from PIL import Image
 from skimage import img_as_ubyte
 from tqdm import tqdm
-from base.logger import MLogger
 
 logger = MLogger(__name__)
 

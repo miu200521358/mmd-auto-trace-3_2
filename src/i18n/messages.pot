@@ -135,3 +135,57 @@ msgstr ""
 msgid "姿勢推定結果保存(動画)"
 msgstr ""
 
+msgid "モーション結果保存完了: {motion_dir_path}"
+msgstr ""
+
+msgid "モーション中心位置計算開始"
+msgstr ""
+
+msgid "モーション中心位置: 人物INDEX [{oidx:02d}], 中心位置 {root_pos}"
+msgstr ""
+
+msgid "指定された処理用ディレクトリが存在しません。: {img_dir}"
+msgstr ""
+
+msgid "【No.{oidx}】モーション(回転)計算開始"
+msgstr ""
+
+msgid "【No.{oidx}】モーション(回転)生成開始【{path}】"
+msgstr ""
+
+msgid "【No.{pname}】mediapipe推定開始"
+msgstr ""
+
+msgid "【No.{pname}】mediapipe推定結果出力"
+msgstr ""
+
+msgid "【No.{pname}】関節スムージング準備開始"
+msgstr ""
+
+msgid "【No.{pname}】関節スムージング開始"
+msgstr ""
+
+msgid "【No.{pname}】関節スムージング出力開始"
+msgstr ""
+
+msgid "【No.{pname}】関節スムージング合成開始"
+msgstr ""
+
+msgid "モーション中心位置: 人物INDEX [{root_pname}], 中心位置 {root_pos}"
+msgstr ""
+
+msgid "【No.{pname}】モーション結果位置計算開始"
+msgstr ""
+
+msgid "【No.{pname}】モーション(移動)計算開始"
+msgstr ""
+
+msgid "【No.{pname}】モーション(移動)生成開始【{path}】"
+msgstr ""
+
+msgid "【No.{pname}】モーション(回転)計算開始"
+msgstr ""
+
+msgid "【No.{pname}】モーション(回転)生成開始【{path}】"
+msgstr ""
+

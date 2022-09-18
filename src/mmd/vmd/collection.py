@@ -43,12 +43,18 @@ class VmdBoneNameFrames(BaseIndexNameDictInnerModel[VmdBoneFrame]):
 
         bf = VmdBoneFrame(name=self.name, index=index)
 
-        if prev_index == index or index == next_index:
+        if prev_index == middle_index:
             # prevと等しい場合、指定INDEX以前がないので、その次のをコピーして返す
+            bf.position = self[next_index].position.copy()
+            bf.rotation = self[next_index].rotation.copy()
+            bf.interpolations = self[next_index].interpolations.copy()
+            return bf
+        elif next_index == middle_index:
             # nextと等しい場合は、その前のをコピーして返す
-            bf.position = self[middle_index].position.copy()
-            bf.rotation = self[middle_index].rotation.copy()
-            bf.interpolations = self[middle_index].interpolations.copy()
+            bf.position = self[prev_index].position.copy()
+            bf.rotation = self[prev_index].rotation.copy()
+            bf.interpolations = self[prev_index].interpolations.copy()
+            return bf
 
         prev_bf = self[prev_index]
         next_bf = self[next_index]
@@ -237,3 +243,8 @@ class VmdMotion(BaseHashModel):
         for named_bfs in self.bones:
             for bf in named_bfs:
                 bf.init_matrix()
+
+    def calc_relative_pos(self, index: int, bone_tree: BoneTree):
+        bone = bone_tree.bone
+        for child_bone_tree in bone_tree.children:
+            child_bone = child_bone_tree.bone

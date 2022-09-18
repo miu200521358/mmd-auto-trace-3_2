@@ -39,12 +39,14 @@ def execute(args):
 
         os.makedirs(os.path.join(args.img_dir, "mix"), exist_ok=True)
 
-        for oidx, mediapipe_file_path in enumerate(
-            sorted(glob(os.path.join(args.img_dir, "mediapipe", "json", "*.json")))
+        for mediapipe_file_path in sorted(
+            glob(os.path.join(args.img_dir, "mediapipe", "json", "*.json"))
         ):
+            pname, _ = os.path.splitext(os.path.basename(mediapipe_file_path))
+
             logger.info(
-                "【No.{oidx}】関節スムージング準備開始",
-                oidx=f"{oidx:02}",
+                "【No.{pname}】関節スムージング準備開始",
+                pname=pname,
                 decoration=MLogger.DECORATION_LINE,
             )
 
@@ -55,7 +57,7 @@ def execute(args):
             max_fno = 0
             joint_datas = {}
             for fidx, frame_json_data in tqdm(
-                frame_joints.items(), desc=f"No.{oidx:02} ... "
+                frame_joints.items(), desc=f"No.{pname} ... "
             ):
                 fno = int(fidx)
                 for jtype in [
@@ -70,6 +72,9 @@ def execute(args):
                         continue
 
                     for jname, joint in frame_json_data[jtype]["joints"].items():
+                        if float(joint.get("score", 1.0)) < 0.7:
+                            # scoreが低い時はスルー
+                            continue
                         for axis in ["x", "y", "z"]:
                             if (jname, jtype, axis) not in joint_datas:
                                 joint_datas[(jname, jtype, axis)] = {}
@@ -79,14 +84,14 @@ def execute(args):
                 max_fno = fno
 
             logger.info(
-                "【No.{oidx}】関節スムージング開始",
-                oidx=f"{oidx:02}",
+                "【No.{pname}】関節スムージング開始",
+                pname=pname,
                 decoration=MLogger.DECORATION_LINE,
             )
 
             # スムージング
             for (jname, jtype, axis), joints in tqdm(
-                joint_datas.items(), desc=f"No.{oidx:02} ... "
+                joint_datas.items(), desc=f"No.{pname} ... "
             ):
                 filter = OneEuroFilter(
                     freq=30, mincutoff=1, beta=0.00000000001, dcutoff=1
@@ -95,15 +100,15 @@ def execute(args):
                     joint_datas[(jname, jtype, axis)][fno] = filter(joint, fno)
 
             logger.info(
-                "【No.{oidx}】関節スムージング出力開始",
-                oidx=f"{oidx:02}",
+                "【No.{pname}】関節スムージング出力開始",
+                pname=pname,
                 decoration=MLogger.DECORATION_LINE,
             )
 
             # ジョイントグローバル座標を保存
             with tqdm(
                 total=(len(joint_datas) * max_fno),
-                desc=f"No.{oidx:02} ... ",
+                desc=f"No.{pname} ... ",
             ) as pchar:
                 for (jname, jtype, axis), frame_json_data in joint_datas.items():
                     for fno, smooth_value in frame_json_data.items():
@@ -117,36 +122,40 @@ def execute(args):
                         pchar.update(1)
 
             with open(
-                os.path.join(args.img_dir, "smooth", f"{oidx:02}.json"),
+                os.path.join(args.img_dir, "smooth", f"{pname}.json"),
                 "w",
                 encoding="utf-8",
             ) as f:
                 json.dump(frame_joints, f, indent=4)
 
             logger.info(
-                "【No.{oidx}】関節スムージング合成開始",
-                oidx=f"{oidx:02}",
+                "【No.{pname}】関節スムージング合成開始",
+                pname=pname,
                 decoration=MLogger.DECORATION_LINE,
             )
 
             mix_joints = {}
             for fidx, frame_json_data in tqdm(
-                frame_joints.items(), desc=f"No.{oidx:02} ... "
+                frame_joints.items(), desc=f"No.{pname} ... "
             ):
-                mix_joints[fidx] = {"root": frame_json_data["snipper"]["joints"]["root"], "body": {}}
+                mix_joints[fidx] = {
+                    "image": frame_json_data["snipper"]["image"],
+                    "root": frame_json_data["snipper"]["joints"]["root"],
+                    "body": {},
+                }
 
                 if "mp_body_world_joints" not in frame_json_data:
                     continue
 
-                mix_joints[fidx]["body"] = frame_json_data["mp_body_world_joints"]["joints"]
+                mix_joints[fidx]["body"] = frame_json_data["mp_body_world_joints"][
+                    "joints"
+                ]
 
                 for jname in [
                     "pelvis",
-                    "pelvis_tail",
                     "spine",
                     "neck",
                     "head",
-                    "head_tail",
                     "left_collar",
                     "right_collar",
                 ]:
@@ -232,7 +241,7 @@ def execute(args):
                     ]
 
             with open(
-                os.path.join(args.img_dir, "mix", f"{oidx:02}.json"),
+                os.path.join(args.img_dir, "mix", f"{pname}.json"),
                 "w",
                 encoding="utf-8",
             ) as f:

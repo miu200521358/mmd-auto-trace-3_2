@@ -6,6 +6,7 @@ import numpy as np
 from quaternion import from_rotation_matrix, quaternion
 
 from base.base import BaseModel
+from base.logger import parse_str
 
 
 class MRect(BaseModel):

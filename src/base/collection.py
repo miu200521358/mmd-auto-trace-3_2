@@ -168,7 +168,7 @@ class BaseIndexNameListModel(Generic[TBaseIndexNameModel]):
         return self.data[self.__iter_index]
 
     def __contains__(self, v) -> bool:
-        return v in [v.name for v in self.data]
+        return v in [v.name for v in self.data] or v in [v.index for v in self.data]
 
 
 class BaseIndexDictModel(Generic[TBaseIndexModel]):
@@ -287,11 +287,11 @@ class BaseIndexNameDictInnerModel(Generic[TBaseIndexNameModel]):
 
         # index がない場合、前後のINDEXを取得する
         indices = np.sort(indices + [index])
-        idx = np.where(indices == index)[0]
+        idx = np.where(indices == index)[0][0]
         prev_idx = np.max([0, idx - 1])
         next_idx = np.min([len(indices) - 1, idx + 1])
 
-        return indices[prev_idx], indices[idx], indices[next_idx]
+        return int(indices[prev_idx]), int(indices[idx]), int(indices[next_idx])
 
     def indices(self):
         return sorted(list(self.data.keys()))
@@ -365,7 +365,7 @@ class BaseIndexNameDictModel(
         self.__iter_index: int = 0
 
     def names(self):
-        return sorted(list(self.data.keys()))
+        return list(self.data.keys())
 
     def __getitem__(self, name: str) -> TBaseIndexNameDictInnerModel:
         return self.get(name)

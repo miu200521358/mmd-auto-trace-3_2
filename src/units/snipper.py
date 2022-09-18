@@ -43,7 +43,7 @@ def execute(args):
         parser = get_args_parser()
         argv = parser.parse_args(args=[])
 
-        argv.max_depth = 5
+        argv.max_depth = 300
         argv.data_dir = os.path.join(args.img_dir, "frames")
         argv.output_dir = os.path.join(args.img_dir, "snipper")
         os.makedirs(argv.output_dir, exist_ok=True)

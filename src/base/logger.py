@@ -348,13 +348,12 @@ def parse2str(obj: object) -> str:
     return f"{obj.__class__.__name__}[{', '.join([f'{k}={v}' for k, v in vars(obj).items()])}]"
 
 
-def parse_str(v: object) -> str:
+def parse_str(v: object, decimals=5) -> str:
     """
     丸め処理付き文字列変換処理
 
     小数だったら丸めて一定桁数までしか出力しない
     """
-    decimals = 5
     if isinstance(v, float):
         return f"{round(v, decimals)}"
     elif isinstance(v, np.ndarray):

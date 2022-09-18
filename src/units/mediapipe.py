@@ -49,12 +49,14 @@ def execute(args):
             min_detection_confidence=0.5, min_tracking_confidence=0.5
         ) as holistic:
 
-            for oidx, snipper_persion_json_path in enumerate(
-                sorted(glob(os.path.join(args.img_dir, "snipper", "json", "*.json")))
+            for snipper_persion_json_path in sorted(
+                glob(os.path.join(args.img_dir, "snipper", "json", "*.json"))
             ):
+                pname, _ = os.path.splitext(os.path.basename(snipper_persion_json_path))
+
                 logger.info(
-                    "【No.{oidx}】mediapipe推定開始",
-                    oidx=f"{oidx:02}",
+                    "【No.{pname}】mediapipe推定開始",
+                    pname=pname,
                     decoration=MLogger.DECORATION_LINE,
                 )
 
@@ -64,7 +66,7 @@ def execute(args):
 
                 for fno_name, frame_json_data in tqdm(
                     json_datas.items(),
-                    desc=f"No.{oidx:02} ... ",
+                    desc=f"No.{pname} ... ",
                 ):
 
                     bbox_x = int(frame_json_data["snipper"]["bbox"]["x"])
@@ -84,6 +86,9 @@ def execute(args):
                     image_trim = image[
                         bbox_y : bbox_y + bbox_h, bbox_x : bbox_x + bbox_w
                     ]
+
+                    if not image_trim.any():
+                        continue
 
                     image_trim2 = cv2.cvtColor(
                         cv2.flip(image_trim, 1), cv2.COLOR_BGR2RGB
@@ -110,7 +115,7 @@ def execute(args):
                                 "x": -float(landmark.x),
                                 "y": -float(landmark.y),
                                 "z": float(landmark.z),
-                                "visibility": float(landmark.visibility),
+                                "score": float(landmark.visibility),
                             }
                             frame_json_data["mp_body_world_joints"]["joints"][
                                 output_name
@@ -163,8 +168,8 @@ def execute(args):
                 )
 
                 logger.info(
-                    "【No.{oidx}】mediapipe推定結果出力",
-                    oidx=f"{oidx:02}",
+                    "【No.{pname}】mediapipe推定結果出力",
+                    pname=pname,
                     decoration=MLogger.DECORATION_LINE,
                 )
 

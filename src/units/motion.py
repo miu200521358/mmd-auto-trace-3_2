@@ -18,7 +18,11 @@ from tqdm import tqdm
 
 logger = MLogger(__name__)
 
-MIKU_METER = 12.5 / 10
+MIKU_METER = 12.5
+# 頭ボーンまでの高さ
+HEAD_HEIGHT = 150.0
+# 画素数->ミクセル変換（横）
+PIXEL_RATIO_HORIZONAL = 60.0
 
 
 def execute(args):
@@ -45,145 +49,238 @@ def execute(args):
 
         # トレース用モデルを読み込む
         trace_mov_model = PmxReader().read_by_filepath(args.trace_mov_model_config)
+        trace_rot_model = PmxReader().read_by_filepath(args.trace_rot_model_config)
 
-        smooth_person_file_paths = sorted(
-            glob(os.path.join(args.img_dir, "smooth", "*.json"))
+        logger.info(
+            "モーション中心位置計算開始",
+            decoration=MLogger.DECORATION_LINE,
         )
 
         # 全人物分の順番別ファイル
-        start_z = 0
-        for oidx, person_file_path in enumerate(smooth_person_file_paths):
-            logger.info(
-                "【No.{oidx}】モーション結果位置計算開始",
-                f"{oidx:02d}",
-                decoration=MLogger.DECORATION_LINE,
-            )
-
-            trace_mov_motion = VmdMotion()
+        max_fno = 0
+        all_root_pos = MVector3D()
+        all_frame_joints: dict[int, dict[int, MVector3D]] = {}
+        for person_file_path in sorted(
+            glob(os.path.join(args.img_dir, "mix", "*.json"))
+        ):
+            pname, _ = os.path.splitext(os.path.basename(person_file_path))
 
             frame_joints = {}
             with open(person_file_path, "r", encoding="utf-8") as f:
                 frame_joints = json.load(f)
 
-            target_bone_vecs = {}
-            for jname in PMX_CONNECTIONS.keys():
-                target_bone_vecs[jname] = {}
-
-            max_fno = 0
-            for fidx, frames in tqdm(frame_joints.items(), desc="Read Json ..."):
+            for fidx, frames in frame_joints.items():
                 fno = int(fidx)
-                for jname, joint in frames.items():
-                    if jname not in target_bone_vecs:
-                        target_bone_vecs[jname] = {}
-                    target_bone_vecs[jname][fno] = np.array(
-                        [
-                            float(joint["x"]) * MIKU_METER / 30,
-                            float(joint["y"]) * MIKU_METER / 30,
-                            float(joint["z"]) * MIKU_METER * 10,
-                        ]
+
+                if fno not in all_frame_joints:
+                    all_frame_joints[fno] = {}
+
+                PIXEL_RATIO_VERTICAL = PIXEL_RATIO_HORIZONAL * (
+                    frames["image"]["height"] / frames["image"]["width"]
+                )
+                all_frame_joints[fno][pname] = MVector3D(
+                    frames["root"]["x"]
+                    * (PIXEL_RATIO_HORIZONAL / frames["image"]["width"]),
+                    frames["root"]["y"]
+                    * (PIXEL_RATIO_VERTICAL / frames["image"]["height"]),
+                    frames["root"]["z"],
+                )
+                break
+
+        # 開始キーフレ
+        start_fno = list(sorted(list(all_frame_joints.keys())))[0]
+        all_root_pos = MVector3D(99999999, 0, 0)
+        root_pname = -1
+        for pname, rpos in all_frame_joints[start_fno].items():
+            if abs(all_root_pos.x) > abs(rpos.x):
+                # よりセンターに近い方がrootとなる
+                all_root_pos = rpos
+                root_pname = pname
+        all_root_pos.x = 0
+
+        logger.info(
+            "モーション中心位置: 人物INDEX [{root_pname}], 中心位置 {root_pos}",
+            root_pname=root_pname,
+            root_pos=all_root_pos.to_log(),
+            decoration=MLogger.DECORATION_LINE,
+        )
+
+        for person_file_path in sorted(
+            glob(os.path.join(args.img_dir, "mix", "*.json"))
+        ):
+            pname, _ = os.path.splitext(os.path.basename(person_file_path))
+
+            logger.info(
+                "【No.{pname}】モーション結果位置計算開始",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
+
+            trace_abs_mov_motion = VmdMotion()
+            trace_rel_mov_motion = VmdMotion()
+
+            frame_joints = {}
+            with open(person_file_path, "r", encoding="utf-8") as f:
+                frame_joints = json.load(f)
+
+            for fidx, frames in tqdm(frame_joints.items(), desc=f"No.{pname} ... "):
+                fno = int(fidx)
+                PIXEL_RATIO_VERTICAL = PIXEL_RATIO_HORIZONAL * (
+                    frames["image"]["height"] / frames["image"]["width"]
+                )
+                root_pos = (
+                    MVector3D(
+                        frames["root"]["x"]
+                        * (PIXEL_RATIO_HORIZONAL / frames["image"]["width"]),
+                        frames["root"]["y"]
+                        * (PIXEL_RATIO_VERTICAL / frames["image"]["height"]),
+                        frames["root"]["z"],
                     )
-                    if oidx == 0 and fno == 0 and jname == "root":
-                        start_z = target_bone_vecs[jname][fno][2]
-                    target_bone_vecs[jname][fno][2] -= start_z
-
-                # 下半身
-                target_bone_vecs["pelvis"][fno] = np.copy(target_bone_vecs["root"][fno])
-
-                # 上半身2
-                target_bone_vecs["spine2"][fno] = np.mean(
-                    [
-                        target_bone_vecs["root"][fno],
-                        target_bone_vecs["head_bottom"][fno],
-                    ],
-                    axis=0,
+                    - all_root_pos
                 )
 
-                # 左肩
-                target_bone_vecs["left_collar"][fno] = np.mean(
-                    [
-                        target_bone_vecs["left_shoulder"][fno],
-                        target_bone_vecs["right_shoulder"][fno],
-                    ],
-                    axis=0,
-                )
-
-                # 右肩
-                target_bone_vecs["right_collar"][fno] = np.copy(
-                    target_bone_vecs["left_collar"][fno]
-                )
-
-                # 下半身先
-                target_bone_vecs["pelvis2"][fno] = target_bone_vecs["pelvis"][fno] + (
-                    (
-                        target_bone_vecs["head_bottom"][fno]
-                        - target_bone_vecs["root"][fno]
+                for jname, joint in frames["body"].items():
+                    if jname not in PMX_CONNECTIONS:
+                        continue
+                    bf = VmdBoneFrame(name=PMX_CONNECTIONS[jname], index=fno)
+                    bf.position = (
+                        MVector3D(
+                            float(joint["x"]) * MIKU_METER,
+                            float(joint["y"]) * MIKU_METER,
+                            float(joint["z"]) * MIKU_METER,
+                        )
+                        - root_pos
                     )
-                    / 3
-                )
+                    trace_abs_mov_motion.bones.append(bf)
 
                 max_fno = fno
 
             logger.info(
-                "【No.{oidx}】モーション(移動)計算開始",
-                f"{oidx:02d}",
+                "【No.{pname}】モーション(移動)計算開始",
+                pname=pname,
                 decoration=MLogger.DECORATION_LINE,
             )
 
             with tqdm(
-                total=(len(target_bone_vecs) * max_fno),
-                desc="Create Move BoneFrame ...",
+                total=(len(trace_abs_mov_motion.bones) * max_fno),
+                desc=f"No.{pname} ... ",
             ) as pchar:
-                for jname, bone_vecs in target_bone_vecs.items():
-                    pconn = PMX_CONNECTIONS[jname]
-                    jmmd_name = PMX_CONNECTIONS[jname]["mmd"]
-
-                    bone = trace_mov_model.bones[jmmd_name]
-
+                for bone_name in PMX_CONNECTIONS.values():
+                    # 処理対象ボーン
+                    bone = trace_mov_model.bones[bone_name]
+                    # 処理対象の親ボーン
                     parent_bone = (
                         trace_mov_model.bones[bone.parent_index]
-                        if bone.parent_index >= 0
+                        if bone.parent_index in trace_mov_model.bones
                         else None
                     )
+                    # 親ボーンの絶対座標
+                    parent_pos = parent_bone.position if parent_bone else MVector3D()
 
-                    # 親ボーンのモデルの位置
-                    parent_bone_position = (
-                        parent_bone.position if parent_bone else MVector3D()
-                    )
-
-                    for fno, bone_vec in bone_vecs.items():
-                        bf = VmdBoneFrame(
-                            name=jmmd_name,
-                            index=fno,
-                            regist=True,
+                    for abs_bf in trace_abs_mov_motion.bones[bone_name]:
+                        # 処理対象ボーンの親ボーンキーフレ絶対位置
+                        abs_parent_bf = (
+                            trace_abs_mov_motion.bones[parent_bone.name][abs_bf.index]
+                            if parent_bone
+                            else VmdBoneFrame()
                         )
 
-                        # 親ボーンのモーションの位置
-                        parent_vec = MVector3D(
-                            target_bone_vecs.get(pconn["parent"], {}).get(
-                                fno, np.array([0, 0, 0])
-                            )
+                        bf = VmdBoneFrame(name=abs_bf.name, index=abs_bf.index)
+                        bf.position = (abs_bf.position - abs_parent_bf.position) - (
+                            bone.position - parent_pos
                         )
+                        trace_rel_mov_motion.bones.append(bf)
 
-                        bf.position = (
-                            MVector3D(bone_vec)
-                            - trace_mov_model.bones[jmmd_name].position
-                        ) - (parent_vec - parent_bone_position)
-
-                        trace_mov_motion.bones.append(bf)
                         pchar.update(1)
 
             trace_mov_motion_path = os.path.join(
-                motion_dir_path, f"trace_{process_datetime}_mov_no{oidx:02d}.vmd"
+                motion_dir_path, f"trace_{process_datetime}_mov_no{pname}.vmd"
             )
             logger.info(
-                "【No.{oidx}】モーション(移動)生成開始【{path}】",
-                oidx=f"{oidx:02d}",
+                "【No.{pname}】モーション(移動)生成開始【{path}】",
+                pname=pname,
                 path=os.path.basename(trace_mov_motion_path),
                 decoration=MLogger.DECORATION_LINE,
             )
             VmdWriter.write(
-                trace_mov_model.name, trace_mov_motion, trace_mov_motion_path
+                trace_mov_model.name, trace_rel_mov_motion, trace_mov_motion_path
             )
+
+            # # -------------------------------------------------
+            # # 回転
+
+            # logger.info(
+            #     "【No.{pname}】モーション(回転)計算開始",
+            #     pname=pname,
+            #     decoration=MLogger.DECORATION_LINE,
+            # )
+
+            # trace_rot_motion = VmdMotion()
+
+            # with tqdm(
+            #     total=(len(trace_rel_mov_motion.bones) * max_fno),
+            #     desc=f"No.{pname} ... ",
+            # ) as pchar:
+            #     for fno in range(max_fno):
+            #         upper_mov_bf = trace_rel_mov_motion.bones["下半身"][fno]
+            #         upper_abs_pos: MVector3D = (
+            #             upper_mov_bf.position + trace_mov_model.bones["下半身"].position
+            #         )
+            #         upper_abs_pos.y += trace_rot_model.bones["下半身"].position.y
+
+            #         center_bf = VmdBoneFrame("センター", fno)
+            #         center_bf.position = MVector3D(upper_abs_pos.x, 0, upper_abs_pos.z)
+            #         trace_rot_motion.bones.append(center_bf)
+
+            #         groove_bf = VmdBoneFrame("グルーブ", fno)
+            #         groove_bf.position = MVector3D(
+            #             0, upper_abs_pos.y - trace_rot_model.bones["グルーブ"].position.y, 0
+            #         )
+            #         trace_rot_motion.bones.append(groove_bf)
+
+            #         # for bone_name in trace_rel_mov_motion.bones.names():
+            #         #     # 処理対象ボーン
+            #         #     bone = trace_rot_model.bones[bone_name]
+            #         #     # 処理対象の親ボーン
+            #         #     parent_bone = (
+            #         #         trace_rot_model.bones[bone.parent_index]
+            #         #         if bone.parent_index in trace_rot_model.bones
+            #         #         else None
+            #         #     )
+            #         #     # 親ボーンの絶対座標
+            #         #     parent_pos = (
+            #         #         parent_bone.position if parent_bone else MVector3D()
+            #         #     )
+
+            #         #     # 処理対象ボーンキーフレ絶対位置
+            #         #     abs_bf = trace_rel_mov_motion.bones[bone_name][fno]
+            #         #     # 処理対象ボーンの親ボーンキーフレ絶対位置
+            #         #     abs_parent_bf = (
+            #         #         trace_rel_mov_motion.bones[parent_bone.name][fno]
+            #         #         if parent_bone
+            #         #         else VmdBoneFrame()
+            #         #     )
+
+            #         #     bf = VmdBoneFrame(name=bone_name, index=fno)
+            #         #     bf.position = (abs_bf.position - abs_parent_bf.position) - (
+            #         #         bone.position - parent_pos
+            #         #     )
+            #         #     trace_rel_mov_motion.bones.append(bf)
+
+            #         #     pchar.update(1)
+
+            # trace_rot_motion_path = os.path.join(
+            #     motion_dir_path, f"trace_{process_datetime}_rot_no{pname}.vmd"
+            # )
+            # logger.info(
+            #     "【No.{pname}】モーション(回転)生成開始【{path}】",
+            #     pname=pname,
+            #     path=os.path.basename(trace_rot_motion_path),
+            #     decoration=MLogger.DECORATION_LINE,
+            # )
+            # VmdWriter.write(
+            #     trace_rot_model.name, trace_rot_motion, trace_rot_motion_path
+            # )
 
         logger.info(
             "モーション結果保存完了: {motion_dir_path}",
@@ -198,96 +295,37 @@ def execute(args):
 
 
 PMX_CONNECTIONS = {
-    "全ての親": {
-        "mmd": "全ての親",
-        "parent": None,
-    },
-    "センター": {
-        "mmd": "センター",
-        "parent": "全ての親",
-    },
-    "グルーブ": {
-        "mmd": "グルーブ",
-        "parent": "センター",
-    },
-    "root": {
-        "mmd": "上半身",
-        "parent": "グルーブ",
-    },
-    "spine2": {
-        "mmd": "上半身2",
-        "parent": "root",
-    },
-    "head_bottom": {
-        "mmd": "首",
-        "parent": "spine2",
-    },
-    "nose": {
-        "mmd": "頭",
-        "parent": "head_bottom",
-    },
-    "left_collar": {
-        "mmd": "左肩",
-        "parent": "spine2",
-    },
-    "right_collar": {
-        "mmd": "右肩",
-        "parent": "spine2",
-    },
-    "left_shoulder": {
-        "mmd": "左腕",
-        "parent": "left_collar",
-    },
-    "right_shoulder": {
-        "mmd": "右腕",
-        "parent": "right_collar",
-    },
-    "left_elbow": {
-        "mmd": "左ひじ",
-        "parent": "left_shoulder",
-    },
-    "right_elbow": {
-        "mmd": "右ひじ",
-        "parent": "right_shoulder",
-    },
-    "left_wrist": {
-        "mmd": "左手首",
-        "parent": "left_elbow",
-    },
-    "right_wrist": {
-        "mmd": "右手首",
-        "parent": "right_elbow",
-    },
-    "pelvis": {
-        "mmd": "下半身",
-        "parent": "グルーブ",
-    },
-    "pelvis2": {
-        "mmd": "下半身先",
-        "parent": "pelvis",
-    },
-    "left_hip": {
-        "mmd": "左足",
-        "parent": "pelvis",
-    },
-    "right_hip": {
-        "mmd": "右足",
-        "parent": "pelvis",
-    },
-    "left_knee": {
-        "mmd": "左ひざ",
-        "parent": "left_hip",
-    },
-    "right_knee": {
-        "mmd": "右ひざ",
-        "parent": "right_hip",
-    },
-    "left_ankle": {
-        "mmd": "左足首",
-        "parent": "left_knee",
-    },
-    "right_ankle": {
-        "mmd": "右足首",
-        "parent": "right_knee",
-    },
+    "spine": "上半身",
+    "neck": "首",
+    "nose": "鼻",
+    "head": "頭",
+    "right_eye": "右目",
+    "left_eye": "左目",
+    "right_ear": "右耳",
+    "left_ear": "左耳",
+    "pelvis": "下半身",
+    "left_hip": "左足",
+    "right_hip": "右足",
+    "left_knee": "左ひざ",
+    "right_knee": "右ひざ",
+    "left_ankle": "左足首",
+    "right_ankle": "右足首",
+    "left_foot_index": "左つま先",
+    "right_foot_index": "右つま先",
+    "left_heel": "左かかと",
+    "right_heel": "右かかと",
+    "left_collar": "左肩",
+    "right_collar": "右肩",
+    "left_shoulder": "左腕",
+    "right_shoulder": "右腕",
+    "left_elbow": "左ひじ",
+    "right_elbow": "右ひじ",
+    "body_left_wrist": "左手首",
+    "body_right_wrist": "右手首",
+    "body_right_pinky": "右小指１",
+    "body_left_pinky": "左小指１",
+    "body_right_index": "右人指１",
+    "body_left_index": "左人指１",
+    "body_right_thumb": "右親指０",
+    "body_left_thumb": "左親指０",
 }
