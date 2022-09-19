@@ -44,7 +44,6 @@ def execute(args):
         process_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # トレース用モデルを読み込む
-        # trace_mov_model = PmxReader().read_by_filepath(args.trace_mov_model_config)
         trace_rot_model = PmxReader().read_by_filepath(args.trace_rot_model_config)
 
         logger.info(
@@ -150,57 +149,6 @@ def execute(args):
                     trace_abs_mov_motion.bones.append(bf)
 
                 max_fno = fno
-
-            # logger.info(
-            #     "【No.{pname}】モーション(移動)計算開始",
-            #     pname=pname,
-            #     decoration=MLogger.DECORATION_LINE,
-            # )
-
-            # with tqdm(
-            #     total=(len(trace_abs_mov_motion.bones) * max_fno),
-            #     desc=f"No.{pname} ... ",
-            # ) as pchar:
-            #     for bone_name in PMX_CONNECTIONS.values():
-            #         # 処理対象ボーン
-            #         bone = trace_mov_model.bones[bone_name]
-            #         # 処理対象の親ボーン
-            #         parent_bone = (
-            #             trace_mov_model.bones[bone.parent_index]
-            #             if bone.parent_index in trace_mov_model.bones
-            #             else None
-            #         )
-            #         # 親ボーンの絶対座標
-            #         parent_pos = parent_bone.position if parent_bone else MVector3D()
-
-            #         for abs_bf in trace_abs_mov_motion.bones[bone_name]:
-            #             # 処理対象ボーンの親ボーンキーフレ絶対位置
-            #             abs_parent_bf = (
-            #                 trace_abs_mov_motion.bones[parent_bone.name][abs_bf.index]
-            #                 if parent_bone
-            #                 else VmdBoneFrame()
-            #             )
-
-            #             bf = VmdBoneFrame(name=abs_bf.name, index=abs_bf.index)
-            #             bf.position = (abs_bf.position - abs_parent_bf.position) - (
-            #                 bone.position - parent_pos
-            #             )
-            #             trace_rel_mov_motion.bones.append(bf)
-
-            #             pchar.update(1)
-
-            # trace_mov_motion_path = os.path.join(
-            #     motion_dir_path, f"trace_{process_datetime}_mov_no{pname}.vmd"
-            # )
-            # logger.info(
-            #     "【No.{pname}】モーション(移動)生成開始【{path}】",
-            #     pname=pname,
-            #     path=os.path.basename(trace_mov_motion_path),
-            #     decoration=MLogger.DECORATION_LINE,
-            # )
-            # VmdWriter.write(
-            #     trace_mov_model.name, trace_rel_mov_motion, trace_mov_motion_path
-            # )
 
             logger.info(
                 "【No.{pname}】モーション(センター)計算開始",
@@ -354,7 +302,6 @@ def execute(args):
                 for direction in ["左", "右"]:
 
                     leg_ik_bone_name = f"{direction}足ＩＫ"
-                    leg_ik_parent_bone_name = f"{direction}足IK親"
                     leg_bone_name = f"{direction}足"
                     knee_bone_name = f"{direction}ひざ"
                     ankle_bone_name = f"{direction}足首"
