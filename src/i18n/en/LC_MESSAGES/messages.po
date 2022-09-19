@@ -198,3 +198,9 @@ msgstr "[No.{dir_name}] Posture estimation result save (3D)"
 msgid "姿勢推定結果検証"
 msgstr "Save Posture Estimation Result"
 
+msgid "【No.{pname}】関節スムージング結果保存"
+msgstr "[No.{pname}] Joint smoothing start"
+
+msgid "【No.{pname}】関節スムージング合成結果保存"
+msgstr "[No.{pname}] Joint smoothing synthesis start"
+

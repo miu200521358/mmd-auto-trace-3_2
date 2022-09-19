@@ -387,6 +387,28 @@ def execute(args):
 
                         pchar.update(1)
 
+            logger.info(
+                "【No.{pname}】モーション(IK)計算開始",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
+
+            with tqdm(
+                total=max_fno,
+                desc=f"No.{pname} ... ",
+            ) as pchar:
+                for lower_bf in trace_rot_motion.bones["下半身"]:
+                    fno = lower_bf.index
+                    groove_bf = trace_rot_motion.bones["グルーブ"][fno]
+                    left_leg_ik_bf = trace_rot_motion.bones["左足ＩＫ"][fno]
+                    right_leg_ik_bf = trace_rot_motion.bones["右足ＩＫ"][fno]
+                    leg_y = min(left_leg_ik_bf.position.y, right_leg_ik_bf.position.y)
+                    if leg_y < 0:
+                        # とりあえずマイナスは打ち消す
+                        groove_bf.position.y -= leg_y
+                        left_leg_ik_bf.position.y -= leg_y
+                        right_leg_ik_bf.position.y -= leg_y
+
             trace_rot_motion_path = os.path.join(
                 motion_dir_path, f"trace_{process_datetime}_rot_no{pname}.vmd"
             )

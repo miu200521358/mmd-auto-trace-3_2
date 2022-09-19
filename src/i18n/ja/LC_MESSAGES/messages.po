@@ -189,7 +189,7 @@ msgid "【No.{pname}】モーション(IK)計算開始"
 msgstr "【No.{pname}】モーション(IK)計算開始"
 
 msgid "【No.{dir_name}】snipper姿勢推定開始"
-msgstr "【No.{pname}】mediapipe推定開始"
+msgstr "【No.{dir_name}】mediapipe推定開始"
 
 msgid "【No.{dir_name}】姿勢推定の関連付け"
 msgstr "【No.{dir_name}】姿勢推定の関連付け"
@@ -199,4 +199,10 @@ msgstr "【No.{dir_name}】姿勢推定結果保存(3D)"
 
 msgid "姿勢推定結果検証"
 msgstr "姿勢推定結果保存"
+
+msgid "【No.{pname}】関節スムージング結果保存"
+msgstr "【No.{pname}】関節スムージング開始"
+
+msgid "【No.{pname}】関節スムージング合成結果保存"
+msgstr "【No.{pname}】関節スムージング合成開始"
 
