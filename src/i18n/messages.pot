@@ -207,3 +207,9 @@ msgstr ""
 msgid "姿勢推定結果検証"
 msgstr ""
 
+msgid "【No.{pname}】関節スムージング結果保存"
+msgstr ""
+
+msgid "【No.{pname}】関節スムージング合成結果保存"
+msgstr ""
+

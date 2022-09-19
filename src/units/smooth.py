@@ -60,26 +60,38 @@ def execute(args):
                 frame_joints.items(), desc=f"No.{pname} ... "
             ):
                 fno = int(fidx)
+                width = int(frame_json_data["snipper"]["image"]["width"])
+                height = int(frame_json_data["snipper"]["image"]["height"])
                 for jtype in [
                     "snipper",
                     "mp_body_joints",
                     "mp_body_world_joints",
                     "mp_left_hand_joints",
                     "mp_right_hand_joints",
-                    "mp_face_joints",
                 ]:
                     if jtype not in frame_json_data:
                         continue
 
                     for jname, joint in frame_json_data[jtype]["joints"].items():
-                        if float(joint.get("score", 1.0)) < 0.9:
+                        if float(joint.get("score", 1.0)) < 0.9 and jname != "root":
                             # scoreが低い時はスルー
                             continue
                         for axis in ["x", "y", "z"]:
                             if (jname, jtype, axis) not in joint_datas:
                                 joint_datas[(jname, jtype, axis)] = {}
-
-                            joint_datas[(jname, jtype, axis)][fno] = float(joint[axis])
+                        if jtype == "snipper":
+                            joint_datas[(jname, jtype, "x")][fno] = (width / 2) - float(
+                                joint["x"]
+                            )
+                            joint_datas[(jname, jtype, "y")][fno] = (
+                                height / 2
+                            ) - float(joint["y"])
+                            joint_datas[(jname, jtype, "z")][fno] = -float(joint["z"])
+                        else:
+                            for axis in ["x", "y", "z"]:
+                                joint_datas[(jname, jtype, axis)][fno] = float(
+                                    joint[axis]
+                                )
 
                 max_fno = fno
 
@@ -104,6 +116,7 @@ def execute(args):
             )
 
             # ジョイントグローバル座標を保存
+            smooth_joints = {}
             with tqdm(
                 total=(len(joint_datas) * max_fno),
                 desc=f"No.{pname} ... ",
@@ -111,20 +124,57 @@ def execute(args):
                 for (jname, jtype, axis), frame_json_data in joint_datas.items():
                     for fno, smooth_value in frame_json_data.items():
                         fidx = str(fno)
-                        if fidx not in frame_joints or jtype not in frame_joints[fidx]:
-                            continue
+                        if fidx not in smooth_joints:
+                            smooth_joints[fidx] = {
+                                "image": {
+                                    "width": float(
+                                        frame_joints[fidx]["snipper"]["image"]["width"]
+                                    ),
+                                    "height": float(
+                                        frame_joints[fidx]["snipper"]["image"]["height"]
+                                    ),
+                                },
+                                "bbox": {
+                                    "x": float(
+                                        frame_joints[fidx]["snipper"]["bbox"]["x"]
+                                    ),
+                                    "y": float(
+                                        frame_joints[fidx]["snipper"]["bbox"]["y"]
+                                    ),
+                                    "width": float(
+                                        frame_joints[fidx]["snipper"]["bbox"]["width"]
+                                    ),
+                                    "height": float(
+                                        frame_joints[fidx]["snipper"]["bbox"]["height"]
+                                    ),
+                                },
+                            }
+                            if "mp_face_joints" in frame_joints[fidx]:
+                                smooth_joints[fidx]["mp_face_joints"] = frame_joints[
+                                    fidx
+                                ]["mp_face_joints"]
+                        if jtype not in smooth_joints[fidx]:
+                            smooth_joints[fidx][jtype] = {"joints": {}}
+                        if jname not in smooth_joints[fidx][jtype]["joints"]:
+                            smooth_joints[fidx][jtype]["joints"][jname] = {}
 
-                        frame_joints[fidx][jtype]["joints"][jname][axis] = float(
+                        smooth_joints[fidx][jtype]["joints"][jname][axis] = float(
                             smooth_value
                         )
                         pchar.update(1)
+
+            logger.info(
+                "【No.{pname}】関節スムージング結果保存",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
 
             with open(
                 os.path.join(args.img_dir, "smooth", f"{pname}.json"),
                 "w",
                 encoding="utf-8",
             ) as f:
-                json.dump(frame_joints, f, indent=4)
+                json.dump(smooth_joints, f, indent=4)
 
             logger.info(
                 "【No.{pname}】関節スムージング合成開始",
@@ -133,19 +183,19 @@ def execute(args):
             )
 
             mix_joints = {}
-            for fidx, frame_json_data in tqdm(
-                frame_joints.items(), desc=f"No.{pname} ... "
+            for fidx, smooth_json_data in tqdm(
+                smooth_joints.items(), desc=f"No.{pname} ... "
             ):
                 mix_joints[fidx] = {
-                    "image": frame_json_data["snipper"]["image"],
-                    "root": frame_json_data["snipper"]["joints"]["root"],
+                    "image": smooth_json_data["image"],
+                    "root": smooth_json_data["snipper"]["joints"]["root"],
                     "body": {},
                 }
 
-                if "mp_body_world_joints" not in frame_json_data:
+                if "mp_body_world_joints" not in smooth_json_data:
                     continue
 
-                mix_joints[fidx]["body"] = frame_json_data["mp_body_world_joints"][
+                mix_joints[fidx]["body"] = smooth_json_data["mp_body_world_joints"][
                     "joints"
                 ]
 
@@ -208,8 +258,8 @@ def execute(args):
                     hand_jtype = f"mp_{direction}_hand_joints"
                     if (
                         body_wrist_jname
-                        not in frame_json_data["mp_body_world_joints"]["joints"]
-                        or hand_jtype not in frame_json_data
+                        not in smooth_json_data["mp_body_world_joints"]["joints"]
+                        or hand_jtype not in smooth_json_data
                     ):
                         continue
 
@@ -217,26 +267,34 @@ def execute(args):
                     hand_root_vec = {}
                     for axis in ["x", "y", "z"]:
                         hand_root_vec[axis] = float(
-                            frame_json_data["mp_body_world_joints"]["joints"][
+                            smooth_json_data["mp_body_world_joints"]["joints"][
                                 body_wrist_jname
                             ][axis]
-                            - frame_json_data[hand_jtype]["joints"]["wrist"][axis]
+                            - smooth_json_data[hand_jtype]["joints"]["wrist"][axis]
                         )
 
                     if hand_root_jname not in mix_joints[fidx]:
                         mix_joints[fidx][hand_root_jname] = {}
 
-                    for jname, jvalues in frame_json_data[hand_jtype]["joints"].items():
+                    for jname, jvalues in smooth_json_data[hand_jtype][
+                        "joints"
+                    ].items():
                         mix_joints[fidx][hand_root_jname][jname] = {}
                         for axis in ["x", "y", "z"]:
                             mix_joints[fidx][hand_root_jname][jname][axis] = float(
                                 jvalues[axis]
                             ) + float(hand_root_vec[axis])
 
-                if "mp_face_joints" in frame_json_data:
-                    mix_joints[fidx]["face"] = frame_json_data["mp_face_joints"][
+                if "mp_face_joints" in smooth_json_data:
+                    mix_joints[fidx]["face"] = smooth_json_data["mp_face_joints"][
                         "joints"
                     ]
+
+            logger.info(
+                "【No.{pname}】関節スムージング合成結果保存",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
 
             with open(
                 os.path.join(args.img_dir, "mix", f"{pname}.json"),

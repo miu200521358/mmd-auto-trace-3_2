@@ -16,8 +16,6 @@ from tqdm import tqdm
 logger = MLogger(__name__)
 
 MIKU_METER = 12.5
-# 頭ボーンまでの高さ
-HEAD_HEIGHT = 150.0
 # 画素数->ミクセル変換（横）
 PIXEL_RATIO_HORIZONAL = 60.0
 
