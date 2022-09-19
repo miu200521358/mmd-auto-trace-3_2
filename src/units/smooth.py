@@ -72,7 +72,7 @@ def execute(args):
                         continue
 
                     for jname, joint in frame_json_data[jtype]["joints"].items():
-                        if float(joint.get("score", 1.0)) < 0.7:
+                        if float(joint.get("score", 1.0)) < 0.9:
                             # scoreが低い時はスルー
                             continue
                         for axis in ["x", "y", "z"]:

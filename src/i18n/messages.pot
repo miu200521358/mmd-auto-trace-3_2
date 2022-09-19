@@ -189,3 +189,9 @@ msgstr ""
 msgid "【No.{pname}】モーション(回転)生成開始【{path}】"
 msgstr ""
 
+msgid "【No.{pname}】モーション(センター)計算開始"
+msgstr ""
+
+msgid "【No.{pname}】モーション(IK)計算開始"
+msgstr ""
+

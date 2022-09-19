@@ -27,6 +27,10 @@ class VmdBoneNameFrames(BaseIndexNameDictInnerModel[VmdBoneFrame]):
         super().__init__(name=name)
 
     def __getitem__(self, index: int) -> VmdBoneFrame:
+        if not self.data:
+            # まったくデータがない場合、生成
+            return VmdBoneFrame(name=self.name, index=index)
+
         indices = self.indices()
         if index not in indices:
             # キーフレがない場合、生成したのを返す（保持はしない）
@@ -142,6 +146,12 @@ class VmdBoneFrames(BaseIndexNameDictModel[VmdBoneFrame, VmdBoneNameFrames]):
         for bone_name in self.names():
             bone_frames[bone_name] = self[bone_name][index]
         return bone_frames
+
+    def get(self, name: str) -> VmdBoneNameFrames:
+        if name not in self.data:
+            self.data[name] = self.create_inner(name)
+
+        return self.data[name]
 
 
 class VmdMorphFrames(
