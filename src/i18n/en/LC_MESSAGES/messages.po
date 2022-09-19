@@ -186,3 +186,15 @@ msgstr "[No.{pname}] motion (center) calculation start"
 msgid "【No.{pname}】モーション(IK)計算開始"
 msgstr "[No.{pname}] motion (IK) calculation start"
 
+msgid "【No.{dir_name}】snipper姿勢推定開始"
+msgstr "[No.{dir_name}] start mediapipe estimation"
+
+msgid "【No.{dir_name}】姿勢推定の関連付け"
+msgstr "[No.{dir_name}] pose estimation association"
+
+msgid "【No.{dir_name}】姿勢推定結果保存(3D)"
+msgstr "[No.{dir_name}] Posture estimation result save (3D)"
+
+msgid "姿勢推定結果検証"
+msgstr "Save Posture Estimation Result"
+

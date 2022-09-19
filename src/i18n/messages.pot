@@ -195,3 +195,15 @@ msgstr ""
 msgid "【No.{pname}】モーション(IK)計算開始"
 msgstr ""
 
+msgid "【No.{dir_name}】snipper姿勢推定開始"
+msgstr ""
+
+msgid "【No.{dir_name}】姿勢推定の関連付け"
+msgstr ""
+
+msgid "【No.{dir_name}】姿勢推定結果保存(3D)"
+msgstr ""
+
+msgid "姿勢推定結果検証"
+msgstr ""
+

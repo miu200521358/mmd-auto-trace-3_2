@@ -52,7 +52,6 @@ def execute(args):
         )
 
         # 全人物分の合成済みファイル
-        max_fno = 0
         all_root_pos = MVector3D()
         all_frame_joints: dict[int, dict[int, MVector3D]] = {}
         for person_file_path in sorted(
@@ -112,12 +111,12 @@ def execute(args):
             )
 
             trace_abs_mov_motion = VmdMotion()
-            # trace_rel_mov_motion = VmdMotion()
 
             frame_joints = {}
             with open(person_file_path, "r", encoding="utf-8") as f:
                 frame_joints = json.load(f)
 
+            max_fno = 0
             for fidx, frames in tqdm(frame_joints.items(), desc=f"No.{pname} ... "):
                 fno = int(fidx)
                 pixel_ratio_vertical = PIXEL_RATIO_HORIZONAL * (
@@ -148,7 +147,8 @@ def execute(args):
                     )
                     trace_abs_mov_motion.bones.append(bf)
 
-                max_fno = fno
+                if fno > max_fno:
+                    max_fno = fno
 
             logger.info(
                 "【No.{pname}】モーション(センター)計算開始",
@@ -320,6 +320,24 @@ def execute(args):
                         toe_bone_name,
                     ]
 
+                    leg_bone_direction = (
+                        trace_rot_model.bones[ankle_bone_name].position
+                        - trace_rot_model.bones[knee_bone_name].position
+                    ).normalized()
+
+                    leg_bone_up = (
+                        trace_rot_model.bones[toe_bone_name].position
+                        - trace_rot_model.bones[ankle_bone_name].position
+                    ).normalized()
+
+                    leg_bone_cross_vec: MVector3D = leg_bone_up.cross(
+                        leg_bone_direction
+                    ).normalized()
+
+                    leg_initial_qq = MQuaternion.from_direction(
+                        leg_bone_direction, leg_bone_cross_vec
+                    )
+
                     for lower_bf in trace_rot_motion.bones["下半身"]:
                         fno = lower_bf.index
                         mats = {}
@@ -346,24 +364,6 @@ def execute(args):
 
                         # 足IKの角度
 
-                        leg_bone_direction = (
-                            trace_rot_model.bones[ankle_bone_name].position
-                            - trace_rot_model.bones[knee_bone_name].position
-                        ).normalized()
-
-                        leg_bone_up = (
-                            trace_rot_model.bones[toe_bone_name].position
-                            - trace_rot_model.bones[ankle_bone_name].position
-                        ).normalized()
-
-                        leg_bone_cross_vec: MVector3D = leg_bone_up.cross(
-                            leg_bone_direction
-                        ).normalized()
-
-                        leg_initial_qq = MQuaternion.from_direction(
-                            leg_bone_direction, leg_bone_cross_vec
-                        )
-
                         knee_abs_pos = mats[knee_bone_name] * MVector3D()
                         ankle_abs_pos = mats[ankle_bone_name] * MVector3D()
                         toe_abs_pos = mats[toe_bone_name] * MVector3D()
@@ -381,8 +381,9 @@ def execute(args):
 
                         leg_ik_bf = VmdBoneFrame(name=leg_ik_bone_name, index=fno)
                         leg_ik_bf.position = (
-                            mats[ankle_bone_name] * MVector3D()
-                        ) - trace_rot_model.bones[ankle_bone_name].position
+                            ankle_abs_pos
+                            - trace_rot_model.bones[ankle_bone_name].position
+                        )
                         leg_ik_bf.rotation = leg_ik_qq
                         trace_rot_motion.bones.append(leg_ik_bf)
 
