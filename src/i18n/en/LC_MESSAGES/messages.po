@@ -18,36 +18,29 @@ msgstr ""
 
 msgid "MMD自動トレース開始\n　処理対象映像ファイル: {video_file}\n　処理内容: {process}"
 msgstr "MMD auto trace start\nProcessing target video file: {video_file}\nProcessing content: {process}"
-
 msgid "動画準備開始"
 msgstr "Video ready"
 
 msgid "【初回チェック】\n　ファイル名: {video_file}, ファイルサイズ: {size}, 横: {W}, 縦: {H}, フレーム数: {count}, fps: {fps}"
 msgstr "[First check]\nFile name: {video_file}, File size: {size}, Horizontal: {W}, Vertical: {H}, Number of frames: {count}, fps: {fps}"
-
 msgid "元動画読み込み開始"
 msgstr "Start loading original video"
 
 msgid "入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}x{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}"
 msgstr "The input video size is not divisible by 40 after adjustment.Before adjustment({W}x{H}) -> After adjustment({width}x{org_height})\nIt will be the appropriate size({height}) Fill top edge up to \n{video_file}"
-
 msgid "補間生成開始"
 msgstr "Start interpolation generation"
 
 msgid "【再チェック】\n　準備フォルダ: {process_img_dir}, 横: {width}, 縦: {height}, フレーム数: {last}, fps: {fps}"
 msgstr "[Recheck]\n Preparation folder: {process_img_dir}, Width: {width}, Height: {height}, Number of frames: {last}, fps: {fps}"
-
 msgid "動画準備完了: {process_img_dir}"
 msgstr "Video ready: {process_img_dir}"
 msgid "指定されたファイルパスが存在しません。\n{video_file}"
 msgstr "The specified file path does not exist.\n{video_file}"
-
 msgid "MMD自動トレース終了\n　処理対象映像ファイル: {video_file}\n　処理内容: {process}\n　トレース結果: {img_dir}\n　処理時間: {elapsed_time}"
 msgstr "MMD auto trace end\n　Processing target video file: {video_file}\nProcessing content: {process}\nTrace result: {img_dir}\nProcessing time: {elapsed_time}"
-
 msgid "指定された学習モデルが存在しません\n{resume}"
 msgstr "The specified learning model does not exist\n{resume}"
-
 msgid "人物姿勢推定開始: {img_dir}"
 msgstr "Start human pose estimation: {img_dir}"
 
@@ -113,9 +106,83 @@ msgstr "Unexpected error in mediapipe estimation."
 
 msgid "【No.{oidx}】mediapipe推定結果出力"
 msgstr "[No.{oidx}] mediapipe estimation result output"
+
 msgid "【No.{oidx}】関節スムージング準備開始"
 msgstr "[No.{oidx}] Start preparation for joint smoothing"
+
 msgid "【No.{oidx}】関節スムージング出力開始"
 msgstr "[No.{oidx}] Joint smoothing output start"
+
 msgid "【No.{oidx}】関節スムージング合成開始"
 msgstr "[No.{oidx}] Joint smoothing synthesis start"
+
+msgid "snipper姿勢推定開始"
+msgstr "Start snipper pose estimation"
+
+msgid "姿勢推定結果保存(2D)"
+msgstr "Save Posture Estimation Result (2D)"
+
+msgid "姿勢推定結果保存(3D)"
+msgstr "Save Posture Estimation Result (3D)"
+
+msgid "姿勢推定結果保存(動画)"
+msgstr "Save Posture Estimation Result (Video)"
+
+msgid "モーション結果保存完了: {motion_dir_path}"
+msgstr "Motion result saved: {motion_dir_path}"
+
+msgid "モーション中心位置計算開始"
+msgstr "Motion center position calculation start"
+
+msgid "モーション中心位置: 人物INDEX [{oidx:02d}], 中心位置 {root_pos}"
+msgstr "Motion Center Position: Human INDEX [{oidx:02d}], Center Position {root_pos}"
+msgid "指定された処理用ディレクトリが存在しません。: {img_dir}"
+msgstr "The specified processing directory does not exist: {img_dir}"
+
+msgid "【No.{oidx}】モーション(回転)計算開始"
+msgstr "[No.{oidx}] motion (rotation) calculation start"
+
+msgid "【No.{oidx}】モーション(回転)生成開始【{path}】"
+msgstr "[No.{oidx}] motion (rotation) generation start [{path}]"
+
+msgid "【No.{pname}】mediapipe推定開始"
+msgstr "[No.{pname}] start mediapipe estimation"
+
+msgid "【No.{pname}】mediapipe推定結果出力"
+msgstr "[No.{pname}] mediapipe estimation result output"
+
+msgid "【No.{pname}】関節スムージング準備開始"
+msgstr "[No.{pname}] Start preparation for joint smoothing"
+
+msgid "【No.{pname}】関節スムージング開始"
+msgstr "[No.{pname}] Joint smoothing start"
+
+msgid "【No.{pname}】関節スムージング出力開始"
+msgstr "[No.{pname}] Joint smoothing output start"
+
+msgid "【No.{pname}】関節スムージング合成開始"
+msgstr "[No.{pname}] Joint smoothing synthesis start"
+
+msgid "モーション中心位置: 人物INDEX [{root_pname}], 中心位置 {root_pos}"
+msgstr "Motion Center Position: Person INDEX [{root_pname}], Center Position {root_pos}"
+msgid "【No.{pname}】モーション結果位置計算開始"
+msgstr "[No.{pname}] motion result position calculation start"
+
+msgid "【No.{pname}】モーション(移動)計算開始"
+msgstr "[No.{pname}] motion (movement) calculation start"
+
+msgid "【No.{pname}】モーション(移動)生成開始【{path}】"
+msgstr "[No.{pname}] motion (movement) generation start [{path}]"
+
+msgid "【No.{pname}】モーション(回転)計算開始"
+msgstr "[No.{pname}] motion (rotation) calculation start"
+
+msgid "【No.{pname}】モーション(回転)生成開始【{path}】"
+msgstr "[No.{pname}] motion (rotation) generation start [{path}]"
+
+msgid "【No.{pname}】モーション(センター)計算開始"
+msgstr "[No.{pname}] motion (center) calculation start"
+
+msgid "【No.{pname}】モーション(IK)計算開始"
+msgstr "[No.{pname}] motion (IK) calculation start"
+

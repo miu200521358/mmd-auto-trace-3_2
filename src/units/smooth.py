@@ -93,9 +93,7 @@ def execute(args):
             for (jname, jtype, axis), joints in tqdm(
                 joint_datas.items(), desc=f"No.{pname} ... "
             ):
-                filter = OneEuroFilter(
-                    freq=30, mincutoff=1, beta=0.00000000001, dcutoff=1
-                )
+                filter = OneEuroFilter(freq=30, mincutoff=0.3, beta=0.01, dcutoff=0.25)
                 for fno, joint in joints.items():
                     joint_datas[(jname, jtype, axis)][fno] = filter(joint, fno)
 
