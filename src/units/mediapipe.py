@@ -34,7 +34,7 @@ def execute(args):
             )
             return False
 
-        if not os.path.exists(os.path.join(args.img_dir, "snipper", "track2d")):
+        if not os.path.exists(os.path.join(args.img_dir, "snipper", "mix", "json")):
             logger.error(
                 "指定された姿勢推定ディレクトリが存在しません。\n姿勢推定が完了していない可能性があります。: {img_dir}",
                 img_dir=os.path.join(args.img_dir, "snipper", "track2d"),
@@ -50,7 +50,7 @@ def execute(args):
         ) as holistic:
 
             for snipper_persion_json_path in sorted(
-                glob(os.path.join(args.img_dir, "snipper", "json", "*.json"))
+                glob(os.path.join(args.img_dir, "snipper", "mix", "json", "*.json"))
             ):
                 pname, _ = os.path.splitext(os.path.basename(snipper_persion_json_path))
 
@@ -74,9 +74,7 @@ def execute(args):
                     bbox_w = int(frame_json_data["snipper"]["bbox"]["width"])
                     bbox_h = int(frame_json_data["snipper"]["bbox"]["height"])
 
-                    process_img_path = os.path.join(
-                        args.img_dir, "frames", f"frame_{int(fno_name):012}.png"
-                    )
+                    process_img_path = frame_json_data["snipper"]["image"]["path"]
 
                     if not os.path.exists(process_img_path):
                         continue
@@ -188,64 +186,6 @@ def execute(args):
             "mediapipe推定で予期せぬエラーが発生しました。", e, decoration=MLogger.DECORATION_BOX
         )
         return False
-
-
-# 瞳の重心を求める
-# https://cppx.hatenablog.com/entry/2017/12/25/231121#%E7%9E%B3%E5%BA%A7%E6%A8%99%E3%82%92%E5%8F%96%E5%BE%97
-def get_eye_point(img, parts, left=True):
-    if not left:
-        eyes = [
-            parts[36],
-            min(parts[37], parts[38], key=lambda x: x[1]),
-            max(parts[40], parts[41], key=lambda x: x[1]),
-            parts[39],
-        ]
-    else:
-        eyes = [
-            parts[42],
-            min(parts[43], parts[44], key=lambda x: x[1]),
-            max(parts[46], parts[47], key=lambda x: x[1]),
-            parts[45],
-        ]
-    org_x = eyes[0][0]
-    org_y = eyes[1][1]
-
-    resultFrame = img
-
-    windowClose = np.ones((5, 5), np.uint8)
-    windowOpen = np.ones((2, 2), np.uint8)
-    windowErode = np.ones((2, 2), np.uint8)
-
-    eye = img[org_y : eyes[2][1], org_x : eyes[-1][0]]
-    cv2.rectangle(
-        resultFrame,
-        (int(org_x), int(org_y)),
-        (int(eyes[-1][0]), int(eyes[2][1])),
-        (0, 0, 255),
-        1,
-    )
-
-    ret, pupilFrame = cv2.threshold(
-        eye, 55, 255, cv2.THRESH_BINARY
-    )  # 50 ..nothin 70 is better
-    pupilFrame = cv2.morphologyEx(pupilFrame, cv2.MORPH_CLOSE, windowClose)
-    pupilFrame = cv2.morphologyEx(pupilFrame, cv2.MORPH_ERODE, windowErode)
-    pupilFrame = cv2.morphologyEx(pupilFrame, cv2.MORPH_OPEN, windowOpen)
-
-    _, eye = cv2.threshold(
-        cv2.cvtColor(pupilFrame, cv2.COLOR_RGB2GRAY), 30, 255, cv2.THRESH_BINARY_INV
-    )
-
-    moments = cv2.moments(eye, False)
-    try:
-        cx, cy = moments["m10"] / moments["m00"], moments["m01"] / moments["m00"]
-        cv2.circle(resultFrame, (int(cx + org_x), int(cy + org_y)), 5, (255, 0, 0), -1)
-
-        return cx + org_x, cy + org_y, resultFrame
-    except:
-        pass
-
-    return 0, 0, resultFrame
 
 
 # 左右逆
