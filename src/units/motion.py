@@ -9,6 +9,7 @@ from base.logger import MLogger
 from base.math import MMatrix4x4, MQuaternion, MVector3D
 from mmd.pmx.reader import PmxReader
 from mmd.vmd.collection import VmdMotion
+from mmd.vmd.filter import OneEuroFilter
 from mmd.vmd.part import VmdBoneFrame
 from mmd.vmd.writer import VmdWriter
 from tqdm import tqdm
@@ -388,26 +389,89 @@ def execute(args):
                         pchar.update(1)
 
             logger.info(
-                "【No.{pname}】モーション(IK)計算開始",
+                "【No.{pname}】モーション スムージング準備",
                 pname=pname,
                 decoration=MLogger.DECORATION_LINE,
             )
 
-            with tqdm(
-                total=max_fno,
-                desc=f"No.{pname} ... ",
-            ) as pchar:
-                for lower_bf in trace_rot_motion.bones["下半身"]:
-                    fno = lower_bf.index
-                    groove_bf = trace_rot_motion.bones["グルーブ"][fno]
-                    left_leg_ik_bf = trace_rot_motion.bones["左足ＩＫ"][fno]
-                    right_leg_ik_bf = trace_rot_motion.bones["右足ＩＫ"][fno]
-                    leg_y = min(left_leg_ik_bf.position.y, right_leg_ik_bf.position.y)
-                    if leg_y < 0:
-                        # とりあえずマイナスは打ち消す
-                        groove_bf.position.y -= leg_y
-                        left_leg_ik_bf.position.y -= leg_y
-                        right_leg_ik_bf.position.y -= leg_y
+            joint_datas = {}
+
+            # スムージング
+            for lower_bf in tqdm(
+                trace_rot_motion.bones["下半身"], desc=f"No.{pname} ... "
+            ):
+                fno = lower_bf.index
+                groove_bf = trace_rot_motion.bones["グルーブ"][fno]
+                left_leg_ik_bf = trace_rot_motion.bones["左足ＩＫ"][fno]
+                right_leg_ik_bf = trace_rot_motion.bones["右足ＩＫ"][fno]
+                leg_y = min(left_leg_ik_bf.position.y, right_leg_ik_bf.position.y)
+                if leg_y < 0:
+                    # とりあえずマイナスは打ち消す
+                    groove_bf.position.y -= leg_y
+                    left_leg_ik_bf.position.y -= leg_y
+                    right_leg_ik_bf.position.y -= leg_y
+
+                for bone_name in ["センター", "グルーブ", "左足ＩＫ", "右足ＩＫ"]:
+                    if (bone_name, "mov", 0) not in joint_datas:
+                        joint_datas[(bone_name, "mov", 0)] = {}
+                        joint_datas[(bone_name, "mov", 1)] = {}
+                        joint_datas[(bone_name, "mov", 2)] = {}
+
+                    pos = trace_rot_motion.bones[bone_name][fno].position
+                    joint_datas[(bone_name, "mov", 0)][fno] = pos.x
+                    joint_datas[(bone_name, "mov", 1)][fno] = pos.y
+                    joint_datas[(bone_name, "mov", 2)][fno] = pos.z
+
+                for bone_name in list(VMD_CONNECTIONS.keys()) + ["左足ＩＫ", "右足ＩＫ"]:
+                    if (bone_name, "rot", "scalar") not in joint_datas:
+                        joint_datas[(bone_name, "rot", "x")] = {}
+                        joint_datas[(bone_name, "rot", "y")] = {}
+                        joint_datas[(bone_name, "rot", "z")] = {}
+                        joint_datas[(bone_name, "rot", "scalar")] = {}
+
+                    rot = trace_rot_motion.bones[bone_name][fno].rotation
+                    joint_datas[(bone_name, "rot", "x")][fno] = rot.x
+                    joint_datas[(bone_name, "rot", "y")][fno] = rot.y
+                    joint_datas[(bone_name, "rot", "z")][fno] = rot.z
+                    joint_datas[(bone_name, "rot", "scalar")][fno] = rot.scalar
+
+            logger.info(
+                "【No.{pname}】モーション スムージング開始",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
+
+            # スムージング
+            for (jname, jtype, axis), joints in tqdm(
+                joint_datas.items(), desc=f"No.{pname} ... "
+            ):
+                filter = OneEuroFilter(freq=30, mincutoff=0.3, beta=0.01, dcutoff=0.25)
+                for fno, jvalue in joints.items():
+                    joint_datas[(jname, jtype, axis)][fno] = filter(jvalue, fno)
+
+            logger.info(
+                "【No.{pname}】モーション スムージング設定",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
+
+            for (jname, jtype, axis), joints in tqdm(
+                joint_datas.items(), desc=f"No.{pname} ... "
+            ):
+                for fno, jvalue in joints.items():
+                    if jtype == "mov":
+                        trace_rot_motion.bones[jname][fno].position.vector[
+                            axis
+                        ] = jvalue
+                    else:
+                        if axis == "x":
+                            trace_rot_motion.bones[jname][fno].rotation.x = jvalue
+                        elif axis == "y":
+                            trace_rot_motion.bones[jname][fno].rotation.y = jvalue
+                        elif axis == "z":
+                            trace_rot_motion.bones[jname][fno].rotation.z = jvalue
+                        else:
+                            trace_rot_motion.bones[jname][fno].rotation.scalar = jvalue
 
             trace_rot_motion_path = os.path.join(
                 motion_dir_path, f"trace_{process_datetime}_rot_no{pname}.vmd"

@@ -213,3 +213,12 @@ msgstr ""
 msgid "【No.{pname}】関節スムージング合成結果保存"
 msgstr ""
 
+msgid "【No.{pname}】モーション スムージング準備"
+msgstr ""
+
+msgid "【No.{pname}】モーション スムージング開始"
+msgstr ""
+
+msgid "【No.{pname}】モーション スムージング設定"
+msgstr ""
+
