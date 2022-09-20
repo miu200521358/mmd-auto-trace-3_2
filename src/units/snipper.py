@@ -2,7 +2,6 @@ import argparse
 import json
 import os
 import random
-import shutil
 import sys
 from glob import glob
 
@@ -251,11 +250,15 @@ def execute(args):
 
                     match_idxs = {}
                     for pidx, start_match in start_matchs.items():
-                        match_idxs[pidx] = np.sum(list(start_match.values()))
+                        match_idxs[pidx] = np.mean(list(start_match.values()))
 
                     match_person_idx = list(match_idxs.keys())[
                         np.argmin(list(match_idxs.values()))
                     ]
+                    # マッチしたのでも差異が大きければ新しくINDEX付与
+                    if match_idxs[match_person_idx] > 100:
+                        match_person_idx = f"{len(all_json_datas):02d}"
+                        all_json_datas[match_person_idx] = {}
 
                     for sidx, json_data in json_datas.items():
                         all_json_datas[match_person_idx][sidx] = json_data

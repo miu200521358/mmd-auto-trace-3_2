@@ -1,3 +1,6 @@
+import numpy as np
+
+import bezier
 from base.base import BaseModel
 from base.math import MVector2D
 
@@ -8,8 +11,10 @@ INTERPOLATION_MMD_MAX = 127
 class Interpolation(BaseModel):
     def __init__(
         self,
+        begin: MVector2D = None,
         start: MVector2D = None,
         end: MVector2D = None,
+        finish: MVector2D = None,
     ):
         """
         補間曲線
@@ -21,8 +26,52 @@ class Interpolation(BaseModel):
         end : MVector2D, optional
             補間曲線終了, by default None
         """
-        self.start: MVector2D = start or MVector2D()
-        self.end: MVector2D = end or MVector2D()
+        self.begin: MVector2D = begin or MVector2D(0, 0)
+        self.start: MVector2D = start or MVector2D(20, 20)
+        self.end: MVector2D = end or MVector2D(107, 107)
+        self.finish: MVector2D = finish or MVector2D(127, 127)
+
+
+def get_infections(values: list[float], threshold) -> list[int]:
+    extract_idxs = np.where(np.abs(np.round(np.diff(values), 1)) > threshold)[0]
+    if not extract_idxs.any():
+        return []
+
+    extracts = np.array(values)[extract_idxs]
+    f_prime = np.gradient(extracts)
+    infections = extract_idxs[np.where(np.diff(np.sign(f_prime)))[0]]
+
+    return infections
+
+
+def create_interpolation(values: list[float]):
+    if len(values) <= 2 or abs(np.max(values) - np.min(values)) < 0.0001:
+        return Interpolation()
+
+    # Xは次数（フレーム数）分移動
+    xs = np.arange(0, len(values))
+
+    # YはXの移動分を許容範囲とする
+    ys = np.array(values)
+
+    # https://github.com/dhermes/bezier/issues/242
+    s_vals = np.linspace(0, 1, len(values))
+    representative = bezier.Curve.from_nodes(np.eye(4))
+    transform = representative.evaluate_multi(s_vals).T
+    nodes = np.vstack([xs, ys])
+    reduced_t, residuals, rank, _ = np.linalg.lstsq(transform, nodes.T, rcond=None)
+    reduced = reduced_t.T
+    joined_curve = bezier.Curve.from_nodes(reduced)
+
+    nodes = joined_curve.nodes
+
+    # 次数を減らしたベジェ曲線をMMD用補間曲線に変換
+    joined_org_bz = scale_bezier(
+        MVector2D(nodes[0, 0], nodes[1, 0]),
+        MVector2D(nodes[0, 1], nodes[1, 1]),
+        MVector2D(nodes[0, 2], nodes[1, 2]),
+        MVector2D(nodes[0, 3], nodes[1, 3]),
+    )
 
 
 # http://d.hatena.ne.jp/edvakf/20111016/1318716097

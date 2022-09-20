@@ -5,8 +5,10 @@ import os
 from datetime import datetime
 from glob import glob
 
+import numpy as np
+from base.bezier import create_interpolation, get_infections
 from base.logger import MLogger
-from base.math import MMatrix4x4, MQuaternion, MVector3D
+from base.math import MMatrix4x4, MQuaternion, MVector2D, MVector3D
 from mmd.pmx.reader import PmxReader
 from mmd.vmd.collection import VmdMotion
 from mmd.vmd.filter import OneEuroFilter
@@ -115,9 +117,13 @@ def execute(args):
             with open(person_file_path, "r", encoding="utf-8") as f:
                 frame_joints = json.load(f)
 
-            max_fno = 0
-            for fidx, frames in tqdm(frame_joints.items(), desc=f"No.{pname} ... "):
+            start_fno = end_fno = 0
+            for iidx, (fidx, frames) in enumerate(
+                tqdm(frame_joints.items(), desc=f"No.{pname} ... ")
+            ):
                 fno = int(fidx)
+                if iidx == 0:
+                    start_fno = fno
                 pixel_ratio_vertical = PIXEL_RATIO_HORIZONAL * (
                     frames["image"]["height"] / frames["image"]["width"]
                 )
@@ -146,8 +152,8 @@ def execute(args):
                     )
                     trace_abs_mov_motion.bones.append(bf)
 
-                if fno > max_fno:
-                    max_fno = fno
+                if fno > end_fno:
+                    end_fno = fno
 
             logger.info(
                 "【No.{pname}】モーション(センター)計算開始",
@@ -190,7 +196,7 @@ def execute(args):
             )
 
             with tqdm(
-                total=(len(VMD_CONNECTIONS) * max_fno),
+                total=(len(VMD_CONNECTIONS) * end_fno),
                 desc=f"No.{pname} ... ",
             ) as pchar:
                 for target_bone_name, vmd_params in VMD_CONNECTIONS.items():
@@ -295,7 +301,7 @@ def execute(args):
             )
 
             with tqdm(
-                total=(2 * max_fno),
+                total=(2 * end_fno),
                 desc=f"No.{pname} ... ",
             ) as pchar:
                 for direction in ["左", "右"]:
@@ -397,10 +403,7 @@ def execute(args):
             joint_datas = {}
 
             # スムージング
-            for lower_bf in tqdm(
-                trace_rot_motion.bones["下半身"], desc=f"No.{pname} ... "
-            ):
-                fno = lower_bf.index
+            for fno in tqdm(range(start_fno, end_fno), desc=f"No.{pname} ... "):
                 groove_bf = trace_rot_motion.bones["グルーブ"][fno]
                 left_leg_ik_bf = trace_rot_motion.bones["左足ＩＫ"][fno]
                 right_leg_ik_bf = trace_rot_motion.bones["右足ＩＫ"][fno]
@@ -472,6 +475,7 @@ def execute(args):
                             trace_rot_motion.bones[jname][fno].rotation.z = jvalue
                         else:
                             trace_rot_motion.bones[jname][fno].rotation.scalar = jvalue
+                        trace_rot_motion.bones[jname][fno].rotation.normalize()
 
             trace_rot_motion_path = os.path.join(
                 motion_dir_path, f"trace_{process_datetime}_rot_no{pname}.vmd"
@@ -485,6 +489,44 @@ def execute(args):
             VmdWriter.write(
                 trace_rot_model.name, trace_rot_motion, trace_rot_motion_path
             )
+
+            # logger.info(
+            #     "【No.{pname}】モーション 間引き準備",
+            #     pname=pname,
+            #     decoration=MLogger.DECORATION_LINE,
+            # )
+
+            # # スムージング
+            # fnos = list(range(end_fno))
+            # for bone_name in ["グルーブ"]:
+            #     mx_values = []
+            #     my_values = []
+            #     mz_values = []
+            #     for fno in tqdm(fnos, desc=f"No.{pname} - {bone_name} ... "):
+            #         pos = trace_rot_motion.bones[bone_name][fno].position
+            #         mx_values.append(pos.x)
+            #         my_values.append(pos.y)
+            #         mz_values.append(pos.z)
+
+            #     mx_infections = get_infections(mx_values, 0.1)
+            #     my_infections = get_infections(my_values, 0.1)
+            #     mz_infections = get_infections(mz_values, 0.1)
+
+            #     infections = list(
+            #         sorted(
+            #             list(
+            #                 {start_fno, end_fno}
+            #                 | set(mx_infections)
+            #                 | set(my_infections)
+            #                 | set(mz_infections)
+            #             )
+            #         )
+            #     )
+
+            #     for sfno, efno in zip(infections[:-1], infections[1:]):
+            #         x_interpolation = create_interpolation(mx_values[sfno:efno])
+            #         y_interpolation = create_interpolation(my_values[sfno:efno])
+            #         z_interpolation = create_interpolation(mz_values[sfno:efno])
 
         logger.info(
             "モーション結果保存完了: {motion_dir_path}",

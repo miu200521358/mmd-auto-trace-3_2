@@ -244,7 +244,7 @@ class VmdMotion(BaseHashModel):
         self.showiks: VmdShowIkFrames = VmdShowIkFrames()
 
     def get_bone_count(self) -> int:
-        return np.sum([len(bfs) for bfs in self.bones])
+        return int(np.sum([len(bfs) for bfs in self.bones]))
 
     def get_name(self) -> str:
         return self.model_name
