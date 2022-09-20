@@ -216,3 +216,6 @@ msgstr "[No.{pname}] Joint smoothing start"
 msgid "【No.{pname}】モーション 間引き準備"
 msgstr "[No.{pname}] motion result position calculation start"
 
+msgid "【No.{pname}】モーション(間引き)生成開始【{path}】"
+msgstr "[No.{pname}] motion (movement) generation start [{path}]"
+

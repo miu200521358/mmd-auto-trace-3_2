@@ -256,8 +256,10 @@ def execute(args):
                         np.argmin(list(match_idxs.values()))
                     ]
                     # マッチしたのでも差異が大きければ新しくINDEX付与
-                    if match_idxs[match_person_idx] > 100:
-                        match_person_idx = f"{len(all_json_datas):02d}"
+                    if match_idxs[match_person_idx] > 80:
+                        match_person_idx = (
+                            f"{(int(list(all_json_datas.keys())[-1]) + 1):02d}"
+                        )
                         all_json_datas[match_person_idx] = {}
 
                     for sidx, json_data in json_datas.items():

@@ -56,7 +56,7 @@ class VmdWriter(BaseModel):
                 fout.write(struct.pack("<f", float(v.w)))
                 fout.write(
                     bytearray(
-                        [int(min(127, max(0, x))) for x in bf.interpolations.vals]
+                        [int(min(127, max(0, x))) for x in bf.interpolations.merge()]
                     )
                 )
 

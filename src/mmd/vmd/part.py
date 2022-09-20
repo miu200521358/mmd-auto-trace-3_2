@@ -57,6 +57,7 @@ class BaseVmdNameFrame(BaseIndexNameModel):
         self.read = read or False
 
 
+# https://hariganep.seesaa.net/article/201103article_1.html
 class BoneInterpolations(BaseModel):
     """
     ボーンキーフレ用補間曲線
@@ -150,6 +151,74 @@ class BoneInterpolations(BaseModel):
             0,
             0,
             0,
+        ]
+
+    def merge(self) -> list[int]:
+        return [
+            self.translation_x.start.x,
+            self.translation_y.start.x,
+            self.translation_z.start.x,
+            self.rotation.start.x,
+            self.translation_x.start.y,
+            self.translation_y.start.y,
+            self.translation_z.start.y,
+            self.rotation.start.y,
+            self.translation_x.end.x,
+            self.translation_y.end.x,
+            self.translation_z.end.x,
+            self.rotation.end.x,
+            self.translation_x.end.y,
+            self.translation_y.end.y,
+            self.translation_z.end.y,
+            self.rotation.end.y,
+            self.translation_y.start.x,
+            self.translation_z.start.x,
+            self.rotation.start.x,
+            self.translation_x.start.y,
+            self.translation_y.start.y,
+            self.translation_z.start.y,
+            self.rotation.start.y,
+            self.translation_x.end.x,
+            self.translation_y.end.x,
+            self.translation_z.end.x,
+            self.rotation.end.x,
+            self.translation_x.end.y,
+            self.translation_y.end.y,
+            self.translation_z.end.y,
+            self.rotation.end.y,
+            self.vals[31],
+            self.translation_z.start.x,
+            self.rotation.start.x,
+            self.translation_x.start.y,
+            self.translation_y.start.y,
+            self.translation_z.start.y,
+            self.rotation.start.y,
+            self.translation_x.end.x,
+            self.translation_y.end.x,
+            self.translation_z.end.x,
+            self.rotation.end.x,
+            self.translation_x.end.y,
+            self.translation_y.end.y,
+            self.translation_z.end.y,
+            self.rotation.end.y,
+            self.vals[46],
+            self.vals[47],
+            self.rotation.start.x,
+            self.translation_x.start.y,
+            self.translation_y.start.y,
+            self.translation_z.start.y,
+            self.rotation.start.y,
+            self.translation_x.end.x,
+            self.translation_y.end.x,
+            self.translation_z.end.x,
+            self.rotation.end.x,
+            self.translation_x.end.y,
+            self.translation_y.end.y,
+            self.translation_z.end.y,
+            self.rotation.end.y,
+            self.vals[61],
+            self.vals[62],
+            self.vals[63],
         ]
 
 

@@ -490,43 +490,81 @@ def execute(args):
                 trace_rot_model.name, trace_rot_motion, trace_rot_motion_path
             )
 
-            # logger.info(
-            #     "【No.{pname}】モーション 間引き準備",
-            #     pname=pname,
-            #     decoration=MLogger.DECORATION_LINE,
-            # )
+            logger.info(
+                "【No.{pname}】モーション 間引き準備",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
 
-            # # スムージング
-            # fnos = list(range(end_fno))
-            # for bone_name in ["グルーブ"]:
-            #     mx_values = []
-            #     my_values = []
-            #     mz_values = []
-            #     for fno in tqdm(fnos, desc=f"No.{pname} - {bone_name} ... "):
-            #         pos = trace_rot_motion.bones[bone_name][fno].position
-            #         mx_values.append(pos.x)
-            #         my_values.append(pos.y)
-            #         mz_values.append(pos.z)
+            trace_thining_motion = VmdMotion()
 
-            #     mx_infections = get_infections(mx_values, 0.1)
-            #     my_infections = get_infections(my_values, 0.1)
-            #     mz_infections = get_infections(mz_values, 0.1)
+            # 間引き
+            fnos = list(range(end_fno))
+            for bone_name in ["センター", "グルーブ", "左足ＩＫ", "右足ＩＫ"] + list(
+                VMD_CONNECTIONS.keys()
+            ):
+                mx_values = []
+                my_values = []
+                mz_values = []
+                rot_values = []
+                for fno in tqdm(fnos, desc=f"No.{pname} - {bone_name} ... "):
+                    pos = trace_rot_motion.bones[bone_name][fno].position
+                    mx_values.append(pos.x)
+                    my_values.append(pos.y)
+                    mz_values.append(pos.z)
+                    rot = trace_rot_motion.bones[bone_name][fno].rotation
+                    rot_values.append(MQuaternion().dot(rot))
 
-            #     infections = list(
-            #         sorted(
-            #             list(
-            #                 {start_fno, end_fno}
-            #                 | set(mx_infections)
-            #                 | set(my_infections)
-            #                 | set(mz_infections)
-            #             )
-            #         )
-            #     )
+                mx_infections = get_infections(mx_values, 0.1, 1)
+                my_infections = get_infections(my_values, 0.1, 1)
+                mz_infections = get_infections(mz_values, 0.1, 1)
+                rot_infections = get_infections(rot_values, 0.001, 3)
 
-            #     for sfno, efno in zip(infections[:-1], infections[1:]):
-            #         x_interpolation = create_interpolation(mx_values[sfno:efno])
-            #         y_interpolation = create_interpolation(my_values[sfno:efno])
-            #         z_interpolation = create_interpolation(mz_values[sfno:efno])
+                infections = list(
+                    sorted(
+                        list(
+                            {start_fno, end_fno}
+                            | set(mx_infections)
+                            | set(my_infections)
+                            | set(mz_infections)
+                            | set(rot_infections)
+                        )
+                    )
+                )
+
+                for sfno, efno in zip(infections[:-1], infections[1:]):
+                    if sfno == infections[0]:
+                        start_bf = trace_rot_motion.bones[bone_name][sfno]
+                    else:
+                        start_bf = trace_thining_motion.bones[bone_name][sfno]
+                    end_bf = trace_rot_motion.bones[bone_name][efno]
+                    end_bf.interpolations.translation_x = create_interpolation(
+                        mx_values[sfno:efno]
+                    )
+                    end_bf.interpolations.translation_y = create_interpolation(
+                        my_values[sfno:efno]
+                    )
+                    end_bf.interpolations.translation_z = create_interpolation(
+                        mz_values[sfno:efno]
+                    )
+                    end_bf.interpolations.rotation = create_interpolation(
+                        rot_values[sfno:efno]
+                    )
+                    trace_thining_motion.bones.append(start_bf)
+                    trace_thining_motion.bones.append(end_bf)
+
+            trace_thining_motion_path = os.path.join(
+                motion_dir_path, f"trace_{process_datetime}_thining_no{pname}.vmd"
+            )
+            logger.info(
+                "【No.{pname}】モーション(間引き)生成開始【{path}】",
+                pname=pname,
+                path=os.path.basename(trace_thining_motion_path),
+                decoration=MLogger.DECORATION_LINE,
+            )
+            VmdWriter.write(
+                trace_rot_model.name, trace_thining_motion, trace_thining_motion_path
+            )
 
         logger.info(
             "モーション結果保存完了: {motion_dir_path}",

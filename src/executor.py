@@ -14,13 +14,11 @@ def show_worked_time(elapsed_time):
     td_h, td_m = divmod(td_m, 60)
 
     if td_m == 0:
-        worked_time = "{0:02d}秒".format(int(td_s))
+        worked_time = "00:00:{0:02d}".format(int(td_s))
     elif td_h == 0:
-        worked_time = "{0:02d}分{1:02d}秒".format(int(td_m), int(td_s))
+        worked_time = "00:{0:02d}:{1:02d}".format(int(td_m), int(td_s))
     else:
-        worked_time = "{0:02d}時間{1:02d}分{2:02d}秒".format(
-            int(td_h), int(td_m), int(td_s)
-        )
+        worked_time = "{0:02d}:{1:02d}:{2:02d}".format(int(td_h), int(td_m), int(td_s))
 
     return worked_time
 
