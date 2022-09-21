@@ -133,8 +133,8 @@ msgstr "モーション結果保存完了: {motion_dir_path}"
 msgid "モーション中心位置計算開始"
 msgstr "モーション中心位置計算開始"
 
-msgid "モーション中心位置: 人物INDEX [{oidx:02d}], 中心位置 {root_pos}"
-msgstr "モーション中心位置: 人物INDEX [{oidx:02d}], 中心位置 {root_pos}"
+msgid "モーション中心位置: 人物INDEX [{oidx:03d}], 中心位置 {root_pos}"
+msgstr "モーション中心位置: 人物INDEX [{oidx:03d}], 中心位置 {root_pos}"
 
 msgid "指定された処理用ディレクトリが存在しません。: {img_dir}"
 msgstr "指定された処理用ディレクトリが存在しません。: {img_dir}"

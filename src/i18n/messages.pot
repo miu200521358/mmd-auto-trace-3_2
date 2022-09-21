@@ -141,7 +141,7 @@ msgstr ""
 msgid "モーション中心位置計算開始"
 msgstr ""
 
-msgid "モーション中心位置: 人物INDEX [{oidx:02d}], 中心位置 {root_pos}"
+msgid "モーション中心位置: 人物INDEX [{oidx:03d}], 中心位置 {root_pos}"
 msgstr ""
 
 msgid "指定された処理用ディレクトリが存在しません。: {img_dir}"
