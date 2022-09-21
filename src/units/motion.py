@@ -192,7 +192,7 @@ def execute(args):
             )
 
             with tqdm(
-                total=(len(VMD_CONNECTIONS) * end_fno),
+                total=(len(VMD_CONNECTIONS) * (end_fno - start_fno)),
                 desc=f"No.{pname} ... ",
             ) as pchar:
                 for target_bone_name, vmd_params in VMD_CONNECTIONS.items():
@@ -299,7 +299,7 @@ def execute(args):
             )
 
             with tqdm(
-                total=(2 * end_fno),
+                total=(2 * (end_fno - start_fno)),
                 desc=f"No.{pname} ... ",
             ) as pchar:
                 for direction in ["左", "右"]:
@@ -411,7 +411,8 @@ def execute(args):
             joint_datas = {}
 
             # スムージング
-            for fno in tqdm(range(end_fno), desc=f"No.{pname} ... "):
+            for now_fno in tqdm(range(start_fno, end_fno), desc=f"No.{pname} ... "):
+                fno = start_fno + now_fno
                 groove_bf = trace_org_motion.bones["グルーブ"][fno]
                 left_leg_ik_bf = trace_org_motion.bones["左足ＩＫ"][fno]
                 right_leg_ik_bf = trace_org_motion.bones["右足ＩＫ"][fno]
@@ -522,7 +523,8 @@ def execute(args):
                 mz_values = []
                 rot_values = []
                 rot_y_values = []
-                for fno in range(end_fno):
+                for now_fno in range(start_fno, end_fno):
+                    fno = start_fno + now_fno
                     pos = trace_smooth_motion.bones[bone_name][fno].position
                     mx_values.append(pos.x)
                     my_values.append(pos.y)
