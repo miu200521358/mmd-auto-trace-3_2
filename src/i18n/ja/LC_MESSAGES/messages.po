@@ -197,9 +197,9 @@ msgid "【No.{dir_name}】姿勢推定結果保存(3D)"
 msgstr "【No.{dir_name}】姿勢推定結果保存(3D)"
 
 msgid "姿勢推定結果検証"
-msgstr "【No.{pname}】モーション(スムージング)生成開始【{path}】"
+msgstr "姿勢推定結果検証"
 msgid "【No.{pname}】モーション(スムージング)生成開始【{path}】"
-msgstr "【No.{pname}】モーション(移動)生成開始【{path}】"
+msgstr "【No.{pname}】モーション(スムージング)生成開始【{path}】"
 
 msgid "【No.{pname}】モーション 間引き準備"
 msgstr "【No.{pname}】モーション 間引き準備"
@@ -215,4 +215,13 @@ msgstr "【No.{pname}】モーション スムージング開始"
 
 msgid "【No.{pname}】モーション スムージング設定"
 msgstr "【No.{pname}】モーション スムージング設定"
+
+msgid "【No.{pname}】関節スムージング結果保存"
+msgstr "【No.{pname}】関節スムージング開始"
+
+msgid "【No.{pname}】関節距離計測"
+msgstr "【No.{pname}】関節スムージング開始"
+
+msgid "【No.{pname}】関節スムージング合成結果保存"
+msgstr "【No.{pname}】関節スムージング合成開始"
 

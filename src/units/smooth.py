@@ -5,6 +5,7 @@ from glob import glob
 
 import numpy as np
 from base.logger import MLogger
+from base.math import MVector3D
 from mmd.vmd.filter import OneEuroFilter
 from tqdm import tqdm
 
@@ -83,9 +84,9 @@ def execute(args):
                             joint_datas[(jname, jtype, "x")][fno] = (width / 2) - float(
                                 joint["x"]
                             )
-                            joint_datas[(jname, jtype, "y")][fno] = (
-                                height / 2
-                            ) - float(joint["y"])
+                            joint_datas[(jname, jtype, "y")][fno] = float(
+                                joint["y"]
+                            ) - (height / 2)
                             joint_datas[(jname, jtype, "z")][fno] = -float(joint["z"])
                         else:
                             for axis in ["x", "y", "z"]:
@@ -291,6 +292,41 @@ def execute(args):
                     ]
 
             logger.info(
+                "【No.{pname}】関節距離計測",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
+
+            joint_lengths = {}
+            for fidx, mix_joint_data in tqdm(
+                mix_joints.items(), desc=f"No.{pname} ... "
+            ):
+                for start_joint_name, end_joint_name in JOINT_CONNECTIONS:
+                    if (
+                        start_joint_name not in mix_joint_data["body"]
+                        or end_joint_name not in mix_joint_data["body"]
+                    ):
+                        continue
+                    start_pos = MVector3D(
+                        mix_joint_data["body"][start_joint_name]["x"],
+                        mix_joint_data["body"][start_joint_name]["y"],
+                        mix_joint_data["body"][start_joint_name]["z"],
+                    )
+                    end_pos = MVector3D(
+                        mix_joint_data["body"][end_joint_name]["x"],
+                        mix_joint_data["body"][end_joint_name]["y"],
+                        mix_joint_data["body"][end_joint_name]["z"],
+                    )
+                    if start_joint_name not in joint_lengths:
+                        joint_lengths[start_joint_name] = []
+                    joint_lengths[start_joint_name].append(start_pos.distance(end_pos))
+
+            # 関節の長さ（medianで外れを除去）
+            mix_joint_data["length"] = {}
+            for joint_name, joint_lengths in joint_lengths.items():
+                mix_joint_data["length"][joint_name] = np.median(joint_lengths)
+
+            logger.info(
                 "【No.{pname}】関節スムージング合成結果保存",
                 pname=pname,
                 decoration=MLogger.DECORATION_LINE,
@@ -315,3 +351,25 @@ def execute(args):
             "関節スムージングで予期せぬエラーが発生しました。", e, decoration=MLogger.DECORATION_BOX
         )
         return False
+
+
+JOINT_CONNECTIONS: list[tuple[str, str]] = [
+    ("head", "neck"),
+    ("neck", "pelvis"),
+    ("left_collar", "left_shoulder"),
+    ("left_shoulder", "left_elbow"),
+    ("left_elbow", "body_left_wrist"),
+    ("body_left_wrist", "body_left_index"),
+    ("right_collar", "right_shoulder"),
+    ("right_shoulder", "right_elbow"),
+    ("right_elbow", "body_right_wrist"),
+    ("body_right_wrist", "body_right_index"),
+    ("pelvis", "left_hip"),
+    ("left_hip", "left_knee"),
+    ("left_knee", "left_ankle"),
+    ("left_ankle", "left_foot_index"),
+    ("pelvis", "right_hip"),
+    ("right_hip", "right_knee"),
+    ("right_knee", "right_ankle"),
+    ("right_ankle", "right_foot_index"),
+]

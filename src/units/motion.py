@@ -3,13 +3,11 @@ import os
 from datetime import datetime
 from glob import glob
 
-import numpy as np
 from base.bezier import create_interpolation, get_infections
 from base.logger import MLogger
-from base.math import MMatrix4x4, MQuaternion, MVector2D, MVector3D
+from base.math import MMatrix4x4, MQuaternion, MVector3D
 from mmd.pmx.reader import PmxReader
 from mmd.vmd.collection import VmdMotion
-from mmd.vmd.filter import OneEuroFilter
 from mmd.vmd.part import VmdBoneFrame
 from mmd.vmd.writer import VmdWriter
 from scipy.signal import savgol_filter
@@ -44,7 +42,7 @@ def execute(args):
         process_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # トレース用モデルを読み込む
-        trace_rot_model = PmxReader().read_by_filepath(args.trace_rot_model_config)
+        trace_model = PmxReader().read_by_filepath(args.trace_rot_model_config)
 
         logger.info(
             "モーション中心位置計算開始",
@@ -91,6 +89,7 @@ def execute(args):
                 all_root_pos = rpos
                 root_pname = pname
         all_root_pos.x = 0
+        all_root_pos.y = 0
 
         logger.info(
             "モーション中心位置: 人物INDEX [{root_pname}], 中心位置 {root_pos}",
@@ -160,7 +159,7 @@ def execute(args):
                 decoration=MLogger.DECORATION_LINE,
             )
 
-            trace_rot_motion = VmdMotion()
+            trace_org_motion = VmdMotion()
 
             for mov_bf in tqdm(
                 trace_abs_mov_motion.bones["下半身"], desc=f"No.{pname} ... "
@@ -168,25 +167,23 @@ def execute(args):
                 center_abs_pos: MVector3D = mov_bf.position
 
                 center_pos: MVector3D = center_abs_pos - (
-                    trace_rot_model.bones["下半身"].position
-                    - trace_rot_model.bones["腰"].position
+                    trace_model.bones["下半身"].position - trace_model.bones["腰"].position
                 )
                 center_pos.y = 0
 
                 center_bf = VmdBoneFrame(name="センター", index=mov_bf.index)
                 center_bf.position = center_pos
-                trace_rot_motion.bones.append(center_bf)
+                trace_org_motion.bones.append(center_bf)
 
                 groove_pos: MVector3D = center_abs_pos - (
-                    trace_rot_model.bones["下半身"].position
-                    - trace_rot_model.bones["腰"].position
+                    trace_model.bones["下半身"].position - trace_model.bones["腰"].position
                 )
                 groove_pos.x = 0
                 groove_pos.z = 0
 
                 groove_bf = VmdBoneFrame(name="グルーブ", index=mov_bf.index)
                 groove_bf.position = groove_pos
-                trace_rot_motion.bones.append(groove_bf)
+                trace_org_motion.bones.append(groove_bf)
 
             logger.info(
                 "【No.{pname}】モーション(回転)計算開始",
@@ -219,18 +216,18 @@ def execute(args):
 
                     for mov_bf in trace_abs_mov_motion.bones[target_bone_name]:
                         bone_direction = (
-                            trace_rot_model.bones[direction_to_name].position
-                            - trace_rot_model.bones[direction_from_name].position
+                            trace_model.bones[direction_to_name].position
+                            - trace_model.bones[direction_from_name].position
                         ).normalized()
 
                         bone_up = (
-                            trace_rot_model.bones[up_to_name].position
-                            - trace_rot_model.bones[up_from_name].position
+                            trace_model.bones[up_to_name].position
+                            - trace_model.bones[up_from_name].position
                         ).normalized()
 
                         bone_cross = (
-                            trace_rot_model.bones[cross_to_name].position
-                            - trace_rot_model.bones[cross_from_name].position
+                            trace_model.bones[cross_to_name].position
+                            - trace_model.bones[cross_from_name].position
                         ).normalized()
 
                         bone_cross_vec: MVector3D = bone_up.cross(
@@ -283,7 +280,7 @@ def execute(args):
 
                         cancel_qq = MQuaternion()
                         for cancel_name in cancel_names:
-                            cancel_qq *= trace_rot_motion.bones[cancel_name][
+                            cancel_qq *= trace_org_motion.bones[cancel_name][
                                 mov_bf.index
                             ].rotation
 
@@ -291,7 +288,7 @@ def execute(args):
                         bf.rotation = (
                             cancel_qq.inverse() * motion_qq * initial_qq.inverse()
                         )
-                        trace_rot_motion.bones.append(bf)
+                        trace_org_motion.bones.append(bf)
 
                         pchar.update(1)
 
@@ -327,13 +324,13 @@ def execute(args):
                     ]
 
                     leg_bone_direction = (
-                        trace_rot_model.bones[ankle_bone_name].position
-                        - trace_rot_model.bones[knee_bone_name].position
+                        trace_model.bones[ankle_bone_name].position
+                        - trace_model.bones[knee_bone_name].position
                     ).normalized()
 
                     leg_bone_up = (
-                        trace_rot_model.bones[toe_bone_name].position
-                        - trace_rot_model.bones[ankle_bone_name].position
+                        trace_model.bones[toe_bone_name].position
+                        - trace_model.bones[ankle_bone_name].position
                     ).normalized()
 
                     leg_bone_cross_vec: MVector3D = leg_bone_up.cross(
@@ -344,19 +341,19 @@ def execute(args):
                         leg_bone_direction, leg_bone_cross_vec
                     )
 
-                    for lower_bf in trace_rot_motion.bones["下半身"]:
+                    for lower_bf in trace_org_motion.bones["下半身"]:
                         fno = lower_bf.index
                         mats = {}
                         for bidx, bname in enumerate(leg_link_names):
                             mat = MMatrix4x4(identity=True)
-                            bf = trace_rot_motion.bones[bname][fno]
+                            bf = trace_org_motion.bones[bname][fno]
                             # キーフレの相対位置
                             relative_pos = (
-                                trace_rot_model.bones[bname].position + bf.position
+                                trace_model.bones[bname].position + bf.position
                             )
                             if bidx > 0:
                                 # 子ボーンの場合、親の位置をさっぴく
-                                relative_pos -= trace_rot_model.bones[
+                                relative_pos -= trace_model.bones[
                                     leg_link_names[bidx - 1]
                                 ].position
 
@@ -387,26 +384,23 @@ def execute(args):
 
                         leg_ik_bf = VmdBoneFrame(name=leg_ik_bone_name, index=fno)
                         leg_ik_bf.position = (
-                            ankle_abs_pos
-                            - trace_rot_model.bones[ankle_bone_name].position
+                            ankle_abs_pos - trace_model.bones[ankle_bone_name].position
                         )
                         leg_ik_bf.rotation = leg_ik_qq
-                        trace_rot_motion.bones.append(leg_ik_bf)
+                        trace_org_motion.bones.append(leg_ik_bf)
 
                         pchar.update(1)
 
-            trace_rot_motion_path = os.path.join(
-                motion_dir_path, f"trace_{process_datetime}_rot_no{pname}.vmd"
+            trace_org_motion_path = os.path.join(
+                motion_dir_path, f"trace_{process_datetime}_original_no{pname}.vmd"
             )
             logger.info(
                 "【No.{pname}】モーション(回転)生成開始【{path}】",
                 pname=pname,
-                path=os.path.basename(trace_rot_motion_path),
+                path=os.path.basename(trace_org_motion_path),
                 decoration=MLogger.DECORATION_LINE,
             )
-            VmdWriter.write(
-                trace_rot_model.name, trace_rot_motion, trace_rot_motion_path
-            )
+            VmdWriter.write(trace_model.name, trace_org_motion, trace_org_motion_path)
 
             logger.info(
                 "【No.{pname}】モーション スムージング準備",
@@ -418,9 +412,9 @@ def execute(args):
 
             # スムージング
             for fno in tqdm(range(end_fno), desc=f"No.{pname} ... "):
-                groove_bf = trace_rot_motion.bones["グルーブ"][fno]
-                left_leg_ik_bf = trace_rot_motion.bones["左足ＩＫ"][fno]
-                right_leg_ik_bf = trace_rot_motion.bones["右足ＩＫ"][fno]
+                groove_bf = trace_org_motion.bones["グルーブ"][fno]
+                left_leg_ik_bf = trace_org_motion.bones["左足ＩＫ"][fno]
+                right_leg_ik_bf = trace_org_motion.bones["右足ＩＫ"][fno]
                 # とりあえずマイナスは打ち消す
                 min_y = min(left_leg_ik_bf.position.y, right_leg_ik_bf.position.y)
                 if min_y < 0:
@@ -434,7 +428,7 @@ def execute(args):
                         joint_datas[(bone_name, "mov", "y")] = []
                         joint_datas[(bone_name, "mov", "z")] = []
 
-                    pos = trace_rot_motion.bones[bone_name][fno].position
+                    pos = trace_org_motion.bones[bone_name][fno].position
                     joint_datas[(bone_name, "mov", "x")].append(pos.x)
                     joint_datas[(bone_name, "mov", "y")].append(pos.y)
                     joint_datas[(bone_name, "mov", "z")].append(pos.z)
@@ -446,7 +440,7 @@ def execute(args):
                         joint_datas[(bone_name, "rot", "z")] = []
                         joint_datas[(bone_name, "rot", "scalar")] = []
 
-                    rot = trace_rot_motion.bones[bone_name][fno].rotation
+                    rot = trace_org_motion.bones[bone_name][fno].rotation
                     joint_datas[(bone_name, "rot", "x")].append(rot.x)
                     joint_datas[(bone_name, "rot", "y")].append(rot.y)
                     joint_datas[(bone_name, "rot", "z")].append(rot.z)
@@ -510,7 +504,7 @@ def execute(args):
                 decoration=MLogger.DECORATION_LINE,
             )
             VmdWriter.write(
-                trace_rot_model.name, trace_smooth_motion, trace_smooth_motion_path
+                trace_model.name, trace_smooth_motion, trace_smooth_motion_path
             )
 
             logger.info(
@@ -592,7 +586,7 @@ def execute(args):
                 decoration=MLogger.DECORATION_LINE,
             )
             VmdWriter.write(
-                trace_rot_model.name, trace_thining_motion, trace_thining_motion_path
+                trace_model.name, trace_thining_motion, trace_thining_motion_path
             )
 
         logger.info(

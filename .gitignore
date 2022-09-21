@@ -128,3 +128,4 @@ dmypy.json
 data/model/
 data/pmx/trace_mov_model2.pmx
 data/pmx/trace_mov_model3.pmx
+exec.bat
