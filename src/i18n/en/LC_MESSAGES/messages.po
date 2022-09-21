@@ -81,7 +81,7 @@ msgid "モーション生成処理開始: {img_dir}"
 msgstr "Motion generation process started: {img_dir}"
 
 msgid "【No.{oidx}】モーション結果位置計算開始"
-msgstr "[No.{oidx}]Motion result position calculation start"
+msgstr "[No.{oidx}] motion result position calculation start"
 
 msgid "【No.{oidx}】モーション(移動)計算開始"
 msgstr "[No.{oidx}] motion (movement) calculation start"
@@ -187,7 +187,7 @@ msgid "【No.{pname}】モーション(IK)計算開始"
 msgstr "[No.{pname}] motion (IK) calculation start"
 
 msgid "【No.{dir_name}】snipper姿勢推定開始"
-msgstr "[No.{dir_name}] start snipper estimation"
+msgstr "[No.{dir_name}] snipper pose estimation start"
 
 msgid "【No.{dir_name}】姿勢推定の関連付け"
 msgstr "[No.{dir_name}] pose estimation association"
@@ -196,26 +196,22 @@ msgid "【No.{dir_name}】姿勢推定結果保存(3D)"
 msgstr "[No.{dir_name}] Posture estimation result save (3D)"
 
 msgid "姿勢推定結果検証"
-msgstr "Save Posture Estimation Result"
-
-msgid "【No.{pname}】関節スムージング結果保存"
-msgstr "[No.{pname}] Joint smoothing start"
-
-msgid "【No.{pname}】関節スムージング合成結果保存"
-msgstr "[No.{pname}] Joint smoothing synthesis start"
-
-msgid "【No.{pname}】モーション スムージング準備"
-msgstr "[No.{pname}] Start preparation for joint smoothing"
-
-msgid "【No.{pname}】モーション スムージング開始"
-msgstr "[No.{pname}] Joint smoothing start"
-
-msgid "【No.{pname}】モーション スムージング設定"
-msgstr "[No.{pname}] Joint smoothing start"
+msgstr "Verification of Posture Estimation Results"
+msgid "【No.{pname}】モーション(スムージング)生成開始【{path}】"
+msgstr "[No.{pname}] Motion (smoothing) generation start [{path}]"
 
 msgid "【No.{pname}】モーション 間引き準備"
-msgstr "[No.{pname}] motion result position calculation start"
+msgstr "[No.{pname}] motion thinning preparation"
 
 msgid "【No.{pname}】モーション(間引き)生成開始【{path}】"
-msgstr "[No.{pname}] motion (movement) generation start [{path}]"
+msgstr "[No.{pname}] Motion (thinning) generation start [{path}]"
+
+msgid "【No.{pname}】モーション スムージング準備"
+msgstr "[No.{pname}] motion smoothing preparation"
+
+msgid "【No.{pname}】モーション スムージング開始"
+msgstr "[No.{pname}] motion smoothing start"
+
+msgid "【No.{pname}】モーション スムージング設定"
+msgstr "[No.{pname}] Motion smoothing setting"
 

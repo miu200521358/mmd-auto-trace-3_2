@@ -1,6 +1,4 @@
-import csv
 import json
-import math
 import os
 from datetime import datetime
 from glob import glob
@@ -14,6 +12,7 @@ from mmd.vmd.collection import VmdMotion
 from mmd.vmd.filter import OneEuroFilter
 from mmd.vmd.part import VmdBoneFrame
 from mmd.vmd.writer import VmdWriter
+from scipy.signal import savgol_filter
 from tqdm import tqdm
 
 logger = MLogger(__name__)
@@ -200,6 +199,8 @@ def execute(args):
                 desc=f"No.{pname} ... ",
             ) as pchar:
                 for target_bone_name, vmd_params in VMD_CONNECTIONS.items():
+                    if "direction" not in vmd_params:
+                        continue
                     direction_from_name = vmd_params["direction"][0]
                     direction_to_name = vmd_params["direction"][1]
                     up_from_name = vmd_params["up"][0]
@@ -394,89 +395,6 @@ def execute(args):
 
                         pchar.update(1)
 
-            logger.info(
-                "【No.{pname}】モーション スムージング準備",
-                pname=pname,
-                decoration=MLogger.DECORATION_LINE,
-            )
-
-            joint_datas = {}
-
-            # スムージング
-            for fno in tqdm(range(start_fno, end_fno), desc=f"No.{pname} ... "):
-                groove_bf = trace_rot_motion.bones["グルーブ"][fno]
-                left_leg_ik_bf = trace_rot_motion.bones["左足ＩＫ"][fno]
-                right_leg_ik_bf = trace_rot_motion.bones["右足ＩＫ"][fno]
-                leg_y = min(left_leg_ik_bf.position.y, right_leg_ik_bf.position.y)
-                if leg_y < 0:
-                    # とりあえずマイナスは打ち消す
-                    groove_bf.position.y -= leg_y
-                    left_leg_ik_bf.position.y -= leg_y
-                    right_leg_ik_bf.position.y -= leg_y
-
-                for bone_name in ["センター", "グルーブ", "左足ＩＫ", "右足ＩＫ"]:
-                    if (bone_name, "mov", 0) not in joint_datas:
-                        joint_datas[(bone_name, "mov", 0)] = {}
-                        joint_datas[(bone_name, "mov", 1)] = {}
-                        joint_datas[(bone_name, "mov", 2)] = {}
-
-                    pos = trace_rot_motion.bones[bone_name][fno].position
-                    joint_datas[(bone_name, "mov", 0)][fno] = pos.x
-                    joint_datas[(bone_name, "mov", 1)][fno] = pos.y
-                    joint_datas[(bone_name, "mov", 2)][fno] = pos.z
-
-                for bone_name in list(VMD_CONNECTIONS.keys()) + ["左足ＩＫ", "右足ＩＫ"]:
-                    if (bone_name, "rot", "scalar") not in joint_datas:
-                        joint_datas[(bone_name, "rot", "x")] = {}
-                        joint_datas[(bone_name, "rot", "y")] = {}
-                        joint_datas[(bone_name, "rot", "z")] = {}
-                        joint_datas[(bone_name, "rot", "scalar")] = {}
-
-                    rot = trace_rot_motion.bones[bone_name][fno].rotation
-                    joint_datas[(bone_name, "rot", "x")][fno] = rot.x
-                    joint_datas[(bone_name, "rot", "y")][fno] = rot.y
-                    joint_datas[(bone_name, "rot", "z")][fno] = rot.z
-                    joint_datas[(bone_name, "rot", "scalar")][fno] = rot.scalar
-
-            logger.info(
-                "【No.{pname}】モーション スムージング開始",
-                pname=pname,
-                decoration=MLogger.DECORATION_LINE,
-            )
-
-            # スムージング
-            for (jname, jtype, axis), joints in tqdm(
-                joint_datas.items(), desc=f"No.{pname} ... "
-            ):
-                filter = OneEuroFilter(freq=30, mincutoff=0.3, beta=0.01, dcutoff=0.25)
-                for fno, jvalue in joints.items():
-                    joint_datas[(jname, jtype, axis)][fno] = filter(jvalue, fno)
-
-            logger.info(
-                "【No.{pname}】モーション スムージング設定",
-                pname=pname,
-                decoration=MLogger.DECORATION_LINE,
-            )
-
-            for (jname, jtype, axis), joints in tqdm(
-                joint_datas.items(), desc=f"No.{pname} ... "
-            ):
-                for fno, jvalue in joints.items():
-                    if jtype == "mov":
-                        trace_rot_motion.bones[jname][fno].position.vector[
-                            axis
-                        ] = jvalue
-                    else:
-                        if axis == "x":
-                            trace_rot_motion.bones[jname][fno].rotation.x = jvalue
-                        elif axis == "y":
-                            trace_rot_motion.bones[jname][fno].rotation.y = jvalue
-                        elif axis == "z":
-                            trace_rot_motion.bones[jname][fno].rotation.z = jvalue
-                        else:
-                            trace_rot_motion.bones[jname][fno].rotation.scalar = jvalue
-                        trace_rot_motion.bones[jname][fno].rotation.normalize()
-
             trace_rot_motion_path = os.path.join(
                 motion_dir_path, f"trace_{process_datetime}_rot_no{pname}.vmd"
             )
@@ -491,6 +409,111 @@ def execute(args):
             )
 
             logger.info(
+                "【No.{pname}】モーション スムージング準備",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
+
+            joint_datas = {}
+
+            # スムージング
+            for fno in tqdm(range(end_fno), desc=f"No.{pname} ... "):
+                groove_bf = trace_rot_motion.bones["グルーブ"][fno]
+                left_leg_ik_bf = trace_rot_motion.bones["左足ＩＫ"][fno]
+                right_leg_ik_bf = trace_rot_motion.bones["右足ＩＫ"][fno]
+                # とりあえずマイナスは打ち消す
+                min_y = min(left_leg_ik_bf.position.y, right_leg_ik_bf.position.y)
+                if min_y < 0:
+                    groove_bf.position.y -= min_y
+                    left_leg_ik_bf.position.y = max(0, left_leg_ik_bf.position.y)
+                    right_leg_ik_bf.position.y = max(0, right_leg_ik_bf.position.y)
+
+                for bone_name in ["センター", "グルーブ", "左足ＩＫ", "右足ＩＫ"]:
+                    if (bone_name, "mov", "x") not in joint_datas:
+                        joint_datas[(bone_name, "mov", "x")] = []
+                        joint_datas[(bone_name, "mov", "y")] = []
+                        joint_datas[(bone_name, "mov", "z")] = []
+
+                    pos = trace_rot_motion.bones[bone_name][fno].position
+                    joint_datas[(bone_name, "mov", "x")].append(pos.x)
+                    joint_datas[(bone_name, "mov", "y")].append(pos.y)
+                    joint_datas[(bone_name, "mov", "z")].append(pos.z)
+
+                for bone_name in VMD_CONNECTIONS.keys():
+                    if (bone_name, "rot", "x") not in joint_datas:
+                        joint_datas[(bone_name, "rot", "x")] = []
+                        joint_datas[(bone_name, "rot", "y")] = []
+                        joint_datas[(bone_name, "rot", "z")] = []
+                        joint_datas[(bone_name, "rot", "scalar")] = []
+
+                    rot = trace_rot_motion.bones[bone_name][fno].rotation
+                    joint_datas[(bone_name, "rot", "x")].append(rot.x)
+                    joint_datas[(bone_name, "rot", "y")].append(rot.y)
+                    joint_datas[(bone_name, "rot", "z")].append(rot.z)
+                    joint_datas[(bone_name, "rot", "scalar")].append(rot.scalar)
+
+            logger.info(
+                "【No.{pname}】モーション スムージング開始",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
+
+            smooth_joint_datas = {}
+
+            # スムージング
+            for (jname, jtype, axis), joints in tqdm(
+                joint_datas.items(), desc=f"No.{pname} ... "
+            ):
+                smooth_joint_datas[(jname, jtype, axis)] = savgol_filter(
+                    joints, window_length=7, polyorder=4
+                )
+
+            logger.info(
+                "【No.{pname}】モーション スムージング設定",
+                pname=pname,
+                decoration=MLogger.DECORATION_LINE,
+            )
+
+            trace_smooth_motion = VmdMotion()
+
+            for (jname, jtype, axis), joints in tqdm(
+                smooth_joint_datas.items(), desc=f"No.{pname} ... "
+            ):
+                for fno, jvalue in enumerate(joints):
+                    bf = trace_smooth_motion.bones[jname][fno]
+                    if jtype == "mov":
+                        if axis == "x":
+                            bf.position.x = jvalue
+                        elif axis == "y":
+                            bf.position.y = jvalue
+                        else:
+                            bf.position.z = jvalue
+                    else:
+                        if axis == "x":
+                            bf.rotation.x = jvalue
+                        elif axis == "y":
+                            bf.rotation.y = jvalue
+                        elif axis == "z":
+                            bf.rotation.z = jvalue
+                        else:
+                            bf.rotation.scalar = jvalue
+                            bf.rotation.normalize()
+                    trace_smooth_motion.bones.append(bf)
+
+            trace_smooth_motion_path = os.path.join(
+                motion_dir_path, f"trace_{process_datetime}_smooth_no{pname}.vmd"
+            )
+            logger.info(
+                "【No.{pname}】モーション(スムージング)生成開始【{path}】",
+                pname=pname,
+                path=os.path.basename(trace_smooth_motion_path),
+                decoration=MLogger.DECORATION_LINE,
+            )
+            VmdWriter.write(
+                trace_rot_model.name, trace_smooth_motion, trace_smooth_motion_path
+            )
+
+            logger.info(
                 "【No.{pname}】モーション 間引き準備",
                 pname=pname,
                 decoration=MLogger.DECORATION_LINE,
@@ -499,26 +522,31 @@ def execute(args):
             trace_thining_motion = VmdMotion()
 
             # 間引き
-            fnos = list(range(end_fno))
-            for bone_name in ["センター", "グルーブ", "左足ＩＫ", "右足ＩＫ"] + list(
-                VMD_CONNECTIONS.keys()
-            ):
+            for bone_name in tqdm(VMD_CONNECTIONS.keys()):
                 mx_values = []
                 my_values = []
                 mz_values = []
                 rot_values = []
-                for fno in tqdm(fnos, desc=f"No.{pname} - {bone_name} ... "):
-                    pos = trace_rot_motion.bones[bone_name][fno].position
+                rot_y_values = []
+                for fno in range(end_fno):
+                    pos = trace_smooth_motion.bones[bone_name][fno].position
                     mx_values.append(pos.x)
                     my_values.append(pos.y)
                     mz_values.append(pos.z)
-                    rot = trace_rot_motion.bones[bone_name][fno].rotation
+                    rot = trace_smooth_motion.bones[bone_name][fno].rotation
                     rot_values.append(MQuaternion().dot(rot))
+                    rot_y_values.append(rot.to_euler_degrees().y)
 
                 mx_infections = get_infections(mx_values, 0.1, 1)
                 my_infections = get_infections(my_values, 0.1, 1)
                 mz_infections = get_infections(mz_values, 0.1, 1)
                 rot_infections = get_infections(rot_values, 0.001, 3)
+                # 体幹はY軸のオイラー角の変位（180度のフリップ）を検出する
+                rot_y_infections = (
+                    get_infections(rot_y_values, 0.1, 1)
+                    if bone_name in ["上半身", "下半身"]
+                    else []
+                )
 
                 infections = list(
                     sorted(
@@ -528,16 +556,17 @@ def execute(args):
                             | set(my_infections)
                             | set(mz_infections)
                             | set(rot_infections)
+                            | set(rot_y_infections)
                         )
                     )
                 )
 
                 for sfno, efno in zip(infections[:-1], infections[1:]):
                     if sfno == infections[0]:
-                        start_bf = trace_rot_motion.bones[bone_name][sfno]
+                        start_bf = trace_smooth_motion.bones[bone_name][sfno]
                     else:
                         start_bf = trace_thining_motion.bones[bone_name][sfno]
-                    end_bf = trace_rot_motion.bones[bone_name][efno]
+                    end_bf = trace_smooth_motion.bones[bone_name][efno]
                     end_bf.interpolations.translation_x = create_interpolation(
                         mx_values[sfno:efno]
                     )
@@ -615,9 +644,31 @@ PMX_CONNECTIONS = {
 }
 
 VMD_CONNECTIONS = {
-    "下半身": {"direction": ("首", "上半身"), "up": ("左足", "右足"), "cancel": ()},
-    "上半身": {"direction": ("下半身", "首"), "up": ("左腕", "右腕"), "cancel": ()},
-    "首": {"direction": ("首", "頭"), "up": ("左腕", "右腕"), "cancel": ("上半身",)},
+    "センター": {"window_lengt": 7, "polyorder": 2},
+    "グルーブ": {"window_lengt": 5, "polyorder": 2},
+    "右足ＩＫ": {"window_lengt": 5, "polyorder": 2},
+    "左足ＩＫ": {"window_lengt": 5, "polyorder": 2},
+    "下半身": {
+        "direction": ("首", "上半身"),
+        "up": ("左足", "右足"),
+        "cancel": (),
+        "window_lengt": 7,
+        "polyorder": 2,
+    },
+    "上半身": {
+        "direction": ("下半身", "首"),
+        "up": ("左腕", "右腕"),
+        "cancel": (),
+        "window_lengt": 7,
+        "polyorder": 2,
+    },
+    "首": {
+        "direction": ("首", "頭"),
+        "up": ("左腕", "右腕"),
+        "cancel": ("上半身",),
+        "window_lengt": 5,
+        "polyorder": 2,
+    },
     "頭": {
         "direction": ("首", "頭"),
         "up": ("左耳", "右耳"),
@@ -625,11 +676,15 @@ VMD_CONNECTIONS = {
             "上半身",
             "首",
         ),
+        "window_lengt": 5,
+        "polyorder": 4,
     },
     "左肩": {
         "direction": ("左肩", "左腕"),
         "up": ("上半身", "首"),
         "cancel": ("上半身",),
+        "window_lengt": 5,
+        "polyorder": 2,
     },
     "左腕": {
         "direction": ("左腕", "左ひじ"),
@@ -638,6 +693,8 @@ VMD_CONNECTIONS = {
             "上半身",
             "左肩",
         ),
+        "window_lengt": 5,
+        "polyorder": 4,
     },
     "左ひじ": {
         "direction": ("左ひじ", "左手首"),
@@ -647,6 +704,8 @@ VMD_CONNECTIONS = {
             "左肩",
             "左腕",
         ),
+        "window_lengt": 5,
+        "polyorder": 4,
     },
     "左手首": {
         "direction": ("左手首", "左人指１"),
@@ -657,29 +716,15 @@ VMD_CONNECTIONS = {
             "左腕",
             "左ひじ",
         ),
-    },
-    "左足": {"direction": ("左足", "左ひざ"), "up": ("左足", "右足"), "cancel": ("下半身",)},
-    "左ひざ": {
-        "direction": ("左ひざ", "左足首"),
-        "up": ("左足", "右足"),
-        "cancel": (
-            "下半身",
-            "左足",
-        ),
-    },
-    "左足首": {
-        "direction": ("左足首", "左つま先"),
-        "up": ("左足", "右足"),
-        "cancel": (
-            "下半身",
-            "左足",
-            "左ひざ",
-        ),
+        "window_lengt": 5,
+        "polyorder": 4,
     },
     "右肩": {
         "direction": ("右肩", "右腕"),
         "up": ("上半身", "首"),
         "cancel": ("上半身",),
+        "window_lengt": 5,
+        "polyorder": 2,
     },
     "右腕": {
         "direction": ("右腕", "右ひじ"),
@@ -688,6 +733,8 @@ VMD_CONNECTIONS = {
             "上半身",
             "右肩",
         ),
+        "window_lengt": 5,
+        "polyorder": 4,
     },
     "右ひじ": {
         "direction": ("右ひじ", "右手首"),
@@ -697,6 +744,8 @@ VMD_CONNECTIONS = {
             "右肩",
             "右腕",
         ),
+        "window_lengt": 5,
+        "polyorder": 4,
     },
     "右手首": {
         "direction": ("右手首", "右人指１"),
@@ -707,8 +756,44 @@ VMD_CONNECTIONS = {
             "右腕",
             "右ひじ",
         ),
+        "window_lengt": 5,
+        "polyorder": 4,
     },
-    "右足": {"direction": ("右足", "右ひざ"), "up": ("右足", "左足"), "cancel": ("下半身",)},
+    "左足": {
+        "direction": ("左足", "左ひざ"),
+        "up": ("左足", "右足"),
+        "cancel": ("下半身",),
+        "window_lengt": 5,
+        "polyorder": 2,
+    },
+    "左ひざ": {
+        "direction": ("左ひざ", "左足首"),
+        "up": ("左足", "右足"),
+        "cancel": (
+            "下半身",
+            "左足",
+        ),
+        "window_lengt": 5,
+        "polyorder": 2,
+    },
+    "左足首": {
+        "direction": ("左足首", "左つま先"),
+        "up": ("左足", "右足"),
+        "cancel": (
+            "下半身",
+            "左足",
+            "左ひざ",
+        ),
+        "window_lengt": 5,
+        "polyorder": 2,
+    },
+    "右足": {
+        "direction": ("右足", "右ひざ"),
+        "up": ("右足", "左足"),
+        "cancel": ("下半身",),
+        "window_lengt": 5,
+        "polyorder": 2,
+    },
     "右ひざ": {
         "direction": ("右ひざ", "右足首"),
         "up": ("右足", "左足"),
@@ -716,6 +801,8 @@ VMD_CONNECTIONS = {
             "下半身",
             "右足",
         ),
+        "window_lengt": 5,
+        "polyorder": 2,
     },
     "右足首": {
         "direction": ("右足首", "右つま先"),
@@ -725,5 +812,7 @@ VMD_CONNECTIONS = {
             "右足",
             "右ひざ",
         ),
+        "window_lengt": 5,
+        "polyorder": 2,
     },
 }

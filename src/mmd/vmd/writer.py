@@ -36,8 +36,10 @@ class VmdWriter(BaseModel):
 
         # bone frames
         fout.write(struct.pack("<L", motion.get_bone_count()))  # ボーンフレーム数
-        for bfs in motion.bones:
-            for bf in bfs:
+        for bone_name in motion.bones.names():
+            for fno in reversed(motion.bones[bone_name].indices()):
+                bf = motion.bones[bone_name][fno]
+                # INDEXを逆順に出力する
                 bname = (
                     bf.name.encode("cp932")
                     .decode("shift_jis")

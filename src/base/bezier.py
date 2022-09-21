@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.signal import savgol_filter
 
 import bezier
 from base.base import BaseModel
