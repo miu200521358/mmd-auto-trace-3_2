@@ -54,15 +54,19 @@ def execute(args):
             ):
                 pname, _ = os.path.splitext(os.path.basename(snipper_persion_json_path))
 
+                json_datas = {}
+                with open(snipper_persion_json_path, "r") as f:
+                    json_datas = json.load(f)
+
+                if len(json_datas.keys()) < 10:
+                    # 短すぎるのはスルー
+                    continue
+
                 logger.info(
                     "【No.{pname}】mediapipe推定開始",
                     pname=pname,
                     decoration=MLogger.DECORATION_LINE,
                 )
-
-                json_datas = {}
-                with open(snipper_persion_json_path, "r") as f:
-                    json_datas = json.load(f)
 
                 for fno_name, frame_json_data in tqdm(
                     json_datas.items(),
