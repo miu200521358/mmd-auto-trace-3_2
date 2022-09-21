@@ -217,11 +217,11 @@ msgid "【No.{pname}】モーション スムージング設定"
 msgstr "【No.{pname}】モーション スムージング設定"
 
 msgid "【No.{pname}】関節スムージング結果保存"
-msgstr "【No.{pname}】関節スムージング開始"
+msgstr "【No.{pname}】関節スムージング結果保存"
 
 msgid "【No.{pname}】関節距離計測"
-msgstr "【No.{pname}】関節スムージング開始"
+msgstr "【No.{pname}】関節距離計測"
 
 msgid "【No.{pname}】関節スムージング合成結果保存"
-msgstr "【No.{pname}】関節スムージング合成開始"
+msgstr "【No.{pname}】関節スムージング合成結果保存"
 

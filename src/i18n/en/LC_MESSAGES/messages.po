@@ -216,11 +216,11 @@ msgid "【No.{pname}】モーション スムージング設定"
 msgstr "[No.{pname}] Motion smoothing setting"
 
 msgid "【No.{pname}】関節スムージング結果保存"
-msgstr "[No.{pname}] Joint smoothing start"
+msgstr "[No.{pname}] Save joint smoothing result"
 
 msgid "【No.{pname}】関節距離計測"
-msgstr "[No.{pname}] Joint smoothing start"
+msgstr "[No.{pname}] Joint distance measurement"
 
 msgid "【No.{pname}】関節スムージング合成結果保存"
-msgstr "[No.{pname}] Joint smoothing synthesis start"
+msgstr "[No.{pname}] Joint smoothing synthesis result saving"
 

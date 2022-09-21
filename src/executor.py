@@ -49,15 +49,6 @@ if __name__ == "__main__":
         "--audio-file", type=str, dest="audio_file", default="", help="Audio file path"
     )
     parser.add_argument(
-        "--bone-config",
-        type=str,
-        dest="bone_config",
-        default=os.path.abspath(
-            os.path.join(__file__, "../../data/pmx/あにまさ式ミク準標準ボーン.csv")
-        ),
-        help="MMD Model Bone csv",
-    )
-    parser.add_argument(
         "--trace-mov-model-config",
         type=str,
         dest="trace_mov_model_config",
@@ -71,7 +62,7 @@ if __name__ == "__main__":
         type=str,
         dest="trace_rot_model_config",
         default=os.path.abspath(
-            os.path.join(__file__, "../../data/pmx/trace_rot_model.pmx")
+            os.path.join(__file__, "../../data/pmx/trace_model.pmx")
         ),
         help="MMD Model Bone pmx",
     )
