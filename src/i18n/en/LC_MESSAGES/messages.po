@@ -27,7 +27,7 @@ msgid "元動画読み込み開始"
 msgstr "Start loading original video"
 
 msgid "入力動画のサイズが調整後に40で割り切れません。調整前({W}x{H}) -> 調整後({width}x{org_height})\n適切なサイズ({height})になるまで上辺を塗りつぶします。\n{video_file}"
-msgstr "The input video size is not divisible by 40 after adjustment.Before adjustment({W}x{H}) -> After adjustment({width}x{org_height})\nIt will be the appropriate size({height}) Fill top edge up to \n{video_file}"
+msgstr "The size of the input video is not divisible by 40 after adjustment.Before adjustment({W}x{H}) -> After adjustment({width}x{org_height})\nIt will be the appropriate size({height}) Fill top edge up to \n{video_file}"
 msgid "補間生成開始"
 msgstr "Start interpolation generation"
 

@@ -174,7 +174,7 @@ class MLogger:
                 ]
 
                 if not added_msg_idxs:
-                    messages.append(f'msgid "{new_msg}"\n')
+                    messages.append(f'\nmsgid "{new_msg}"\n')
                     messages.append('msgstr ""\n')
                     messages.append("\n")
                     print("add message: %s", new_msg)
