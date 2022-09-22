@@ -233,3 +233,6 @@ msgstr ""
 msgid "【No.{pname}】関節スムージング合成結果保存"
 msgstr ""
 
+msgid "モーション生成で予期せぬエラーが発生しました。"
+msgstr ""
+

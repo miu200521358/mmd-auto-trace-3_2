@@ -599,7 +599,7 @@ def execute(args):
 
         return True
     except Exception as e:
-        logger.critical("姿勢推定で予期せぬエラーが発生しました。", e, decoration=MLogger.DECORATION_BOX)
+        logger.critical("モーション生成で予期せぬエラーが発生しました。", e, decoration=MLogger.DECORATION_BOX)
         return False
 
 
